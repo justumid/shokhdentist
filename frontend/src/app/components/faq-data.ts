@@ -1,7 +1,8 @@
 export interface FaqItem {
-  id: number;
+  id: string;
   q: string;
   a: string;
+  category?: string;
 }
 
 export const FAQ_DATA: FaqItem[] = [

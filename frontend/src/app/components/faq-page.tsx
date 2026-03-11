@@ -1,20 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CaretUp } from "@phosphor-icons/react/dist/csr/CaretUp";
 import { Question } from "@phosphor-icons/react/dist/csr/Question";
-import { FAQ_DATA } from "./faq-data";
+import { FaqItem } from "./faq-data";
 
 interface FaqPageProps {
   onBack: () => void;
 }
 
 export function FaqPage({ onBack }: FaqPageProps) {
-  const [openId, setOpenId] = useState<number | null>(FAQ_DATA[0]?.id ?? null);
+  const [faqData, setFaqData] = useState<FaqItem[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const toggle = (id: number) => {
+  useEffect(() => {
+    const fetchFAQ = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/faq`);
+        const data = await response.json();
+        setFaqData(data.faq || []);
+        if (data.faq && data.faq.length > 0) {
+          setOpenId(data.faq[0].id);
+        }
+      } catch (error) {
+        console.error("Failed to fetch FAQ:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFAQ();
+  }, []);
+
+  const toggle = (id: string) => {
     setOpenId((prev) => (prev === id ? null : id));
   };
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "#F5F9FC",
+          zIndex: 900,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "'DM Sans', sans-serif",
+        }}
+      >
+        <div style={{ fontSize: 14, color: "#6B8099" }}>Yuklanmoqda...</div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -101,7 +143,7 @@ export function FaqPage({ onBack }: FaqPageProps) {
               lineHeight: 1.6,
             }}
           >
-            {FAQ_DATA.length} ta eng ko'p so'raladigan savollar
+            {faqData.length} ta eng ko'p so'raladigan savollar
           </p>
         </div>
 
@@ -114,7 +156,7 @@ export function FaqPage({ onBack }: FaqPageProps) {
             gap: 10,
           }}
         >
-          {FAQ_DATA.map((faq) => {
+          {faqData.map((faq) => {
             const isOpen = openId === faq.id;
             return (
               <div

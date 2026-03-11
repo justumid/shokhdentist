@@ -41,7 +41,7 @@ import { X } from "@phosphor-icons/react/dist/csr/X";
 import { XCircle } from "@phosphor-icons/react/dist/csr/XCircle";
 
 /* Local modules */
-import { FAQ_DATA, FaqItem } from "./faq-data";
+import { FaqItem } from "./faq-data";
 import { loadReviews, Review } from "./review-data";
 import {
   loadSlotConfig,
@@ -469,9 +469,7 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
   const [reviews, setReviews] = useState<Review[]>(() =>
     loadReviews(),
   );
-  const [faqItems, setFaqItems] = useState<FaqItem[]>([
-    ...FAQ_DATA,
-  ]);
+  const [faqItems, setFaqItems] = useState<FaqItem[]>([]);
   const [users] = useState<UserRecord[]>(MOCK_USERS);
 
   /* Sub-views */
@@ -558,6 +556,22 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
     saveBookedSlots(booked);
   }, [appointments, slotConfig]);
 
+  // Fetch FAQs from backend
+  useEffect(() => {
+    const fetchFAQs = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/faq`);
+        const data = await response.json();
+        if (data.faq) {
+          setFaqItems(data.faq);
+        }
+      } catch (error) {
+        console.error("Failed to fetch FAQs:", error);
+      }
+    };
+    fetchFAQs();
+  }, []);
+
   const handleSaveSlotConfig = () => {
     if (!slotOpenDateInput || !slotEndDateInput) return;
     if (slotEndDateInput < slotOpenDateInput) return;
@@ -610,7 +624,7 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
   /* FAQ */
   const [faqModal, setFaqModal] = useState<{
     mode: "add" | "edit";
-    id?: number;
+    id?: string;
   } | null>(null);
   const [faqQ, setFaqQ] = useState("");
   const [faqA, setFaqA] = useState("");
@@ -1439,30 +1453,84 @@ Boshqa: ${user.otherComplaint || "Yo'q"}
     setFaqA(item.a);
     setFaqModal({ mode: "edit", id: item.id });
   };
-  const saveFaq = () => {
+  const saveFaq = async () => {
     if (!faqQ.trim() || !faqA.trim()) return;
-    if (faqModal?.mode === "add") {
-      const newId = Date.now();
-      setFaqItems((prev) => [
-        ...prev,
-        { id: newId, q: faqQ.trim(), a: faqA.trim() },
-      ]);
-    } else if (
-      faqModal?.mode === "edit" &&
-      faqModal.id !== undefined
-    ) {
-      setFaqItems((prev) =>
-        prev.map((f) =>
-          f.id === faqModal.id
-            ? { ...f, q: faqQ.trim(), a: faqA.trim() }
-            : f,
-        ),
-      );
+    
+    try {
+      if (faqModal?.mode === "add") {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/faq`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Telegram-Init-Data": (window as any).Telegram?.WebApp?.initData || "",
+          },
+          body: JSON.stringify({
+            q: faqQ.trim(),
+            a: faqA.trim(),
+            category: "umumiy"
+          }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setFaqItems((prev) => [...prev, data.item]);
+        }
+      } else if (
+        faqModal?.mode === "edit" &&
+        faqModal.id !== undefined
+      ) {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/admin/faq/${faqModal.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Telegram-Init-Data": (window as any).Telegram?.WebApp?.initData || "",
+            },
+            body: JSON.stringify({
+              q: faqQ.trim(),
+              a: faqA.trim(),
+            }),
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          setFaqItems((prev) =>
+            prev.map((f) =>
+              f.id === faqModal.id ? data.item : f
+            )
+          );
+        }
+      }
+      setFaqModal(null);
+    } catch (error) {
+      console.error("Failed to save FAQ:", error);
+      alert("FAQ saqlashda xatolik yuz berdi");
     }
-    setFaqModal(null);
   };
-  const deleteFaq = (id: number) => {
-    setFaqItems((prev) => prev.filter((f) => f.id !== id));
+  
+  const deleteFaq = async (id: string) => {
+    if (!confirm("Ushbu savolni o'chirishni xohlaysizmi?")) return;
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/admin/faq/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "X-Telegram-Init-Data": (window as any).Telegram?.WebApp?.initData || "",
+          },
+        }
+      );
+      
+      if (response.ok) {
+        setFaqItems((prev) => prev.filter((f) => f.id !== id));
+      }
+    } catch (error) {
+      console.error("Failed to delete FAQ:", error);
+      alert("FAQ o'chirishda xatolik yuz berdi");
+    }
   };
 
   /* ===== REVIEW DELETE ===== */
