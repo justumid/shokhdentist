@@ -165,6 +165,15 @@ def validate_telegram_data(init_data: str) -> Dict:
         
         if calculated_hash == hash_value:
             logger.debug("Telegram data validated successfully")
+            # Extract user data from the 'user' field
+            if 'user' in parsed_data:
+                try:
+                    user_data = json.loads(parsed_data['user'])
+                    logger.debug(f"Extracted user data: {user_data}")
+                    return user_data
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse user JSON: {e}")
+                    return {}
             return parsed_data
         
         logger.warning("Invalid Telegram data hash")
