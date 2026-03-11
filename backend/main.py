@@ -1027,6 +1027,94 @@ async def get_faq():
     
     return {"faq": faq}
 
+@app.get("/api/contact")
+async def get_contact_info():
+    """Get contact information - loads from database"""
+    contact_data = load_data("contact_info")
+    
+    # Return defaults if no custom data
+    if not contact_data:
+        contact_data = [
+            {
+                "id": "phone",
+                "icon": "headphones",
+                "label": "Telefon raqam",
+                "value": "+998 95 227 77 22",
+                "href": "tel:+998952277722"
+            },
+            {
+                "id": "telegram",
+                "icon": "stethoscope",
+                "label": "Telegram (Shifokor)",
+                "value": "@shokh_dentist",
+                "href": "https://t.me/shokh_dentist"
+            },
+            {
+                "id": "address",
+                "icon": "building-office",
+                "label": "Manzil",
+                "value": "Furqat ko'chasi 11a, Tashkent",
+                "href": "https://maps.app.goo.gl/hE3doVgDdWxRNkqKA"
+            }
+        ]
+        save_data("contact_info", contact_data)
+    
+    return {"contacts": contact_data}
+
+@app.get("/api/social")
+async def get_social_links():
+    """Get social media links - loads from database"""
+    social_data = load_data("social_links")
+    
+    # Return defaults if no custom data
+    if not social_data:
+        social_data = [
+            {
+                "id": "telegram",
+                "icon": "telegram-logo",
+                "label": "Telegram",
+                "href": "https://t.me/shokhdentist",
+                "bg": "#E8F4FD",
+                "color": "#0088cc"
+            },
+            {
+                "id": "instagram",
+                "icon": "instagram-logo",
+                "label": "Instagram",
+                "href": "https://instagram.com/shokhdentist",
+                "bg": "#FDE8F0",
+                "color": "#E1306C"
+            },
+            {
+                "id": "facebook",
+                "icon": "facebook-logo",
+                "label": "Facebook",
+                "href": "https://facebook.com/shokhdentist",
+                "bg": "#E8F2FE",
+                "color": "#1877F2"
+            }
+        ]
+        save_data("social_links", social_data)
+    
+    return {"social": social_data}
+
+@app.get("/api/settings")
+async def get_settings():
+    """Get clinic settings - loads from database"""
+    settings_data = load_data("settings")
+    
+    # Return defaults if no custom settings
+    if not settings_data:
+        settings_data = {
+            "clinic_name": "Shokh Dentist",
+            "working_hours": "9:00 - 19:00",
+            "working_days": "Dushanba - Shanba",
+            "description": "Professional tish davolash xizmatlari"
+        }
+        save_data("settings", settings_data)
+    
+    return settings_data
+
 @app.get("/api/stats")
 async def get_stats(telegram_user: Dict = Depends(get_telegram_user)):
     """Get clinic statistics"""
@@ -1829,6 +1917,134 @@ async def admin_get_booked_slots(admin_user: str = Depends(get_admin_user)):
     logger.info(f"Admin '{admin_user}' fetching booked slots")
     booked = load_data("booked_slots")
     return {"bookedSlots": booked}
+
+
+# ── 9. CONTACT INFO MANAGEMENT ───────────────────────────
+
+@app.get("/api/admin/contacts")
+async def admin_get_contacts(admin_user: str = Depends(get_admin_user)):
+    """Admin: Get all contact info"""
+    contacts = load_data("contact_info")
+    return {"contacts": contacts}
+
+@app.post("/api/admin/contacts")
+async def admin_add_contact(contact: Dict[str, Any], admin_user: str = Depends(get_admin_user)):
+    """Admin: Add new contact info"""
+    contacts = load_data("contact_info")
+    new_contact = {
+        "id": contact.get("id", str(uuid.uuid4())),
+        "icon": contact["icon"],
+        "label": contact["label"],
+        "value": contact["value"],
+        "href": contact.get("href", "")
+    }
+    contacts.append(new_contact)
+    save_data("contact_info", contacts)
+    logger.info(f"Admin {admin_user} added contact: {new_contact['id']}")
+    return new_contact
+
+@app.put("/api/admin/contacts/{contact_id}")
+async def admin_update_contact(contact_id: str, contact: Dict[str, Any], admin_user: str = Depends(get_admin_user)):
+    """Admin: Update contact info"""
+    contacts = load_data("contact_info")
+    for c in contacts:
+        if c["id"] == contact_id:
+            c.update({
+                "icon": contact.get("icon", c["icon"]),
+                "label": contact.get("label", c["label"]),
+                "value": contact.get("value", c["value"]),
+                "href": contact.get("href", c.get("href", ""))
+            })
+            save_data("contact_info", contacts)
+            logger.info(f"Admin {admin_user} updated contact: {contact_id}")
+            return c
+    raise HTTPException(404, "Contact not found")
+
+@app.delete("/api/admin/contacts/{contact_id}")
+async def admin_delete_contact(contact_id: str, admin_user: str = Depends(get_admin_user)):
+    """Admin: Delete contact info"""
+    contacts = load_data("contact_info")
+    before = len(contacts)
+    contacts = [c for c in contacts if c["id"] != contact_id]
+    if len(contacts) == before:
+        raise HTTPException(404, "Contact not found")
+    save_data("contact_info", contacts)
+    logger.info(f"Admin {admin_user} deleted contact: {contact_id}")
+    return {"success": True}
+
+
+# ── 10. SOCIAL LINKS MANAGEMENT ───────────────────────────
+
+@app.get("/api/admin/social")
+async def admin_get_social(admin_user: str = Depends(get_admin_user)):
+    """Admin: Get all social links"""
+    social = load_data("social_links")
+    return {"social": social}
+
+@app.post("/api/admin/social")
+async def admin_add_social(social_link: Dict[str, Any], admin_user: str = Depends(get_admin_user)):
+    """Admin: Add new social link"""
+    social = load_data("social_links")
+    new_social = {
+        "id": social_link.get("id", str(uuid.uuid4())),
+        "icon": social_link["icon"],
+        "label": social_link["label"],
+        "href": social_link["href"],
+        "bg": social_link.get("bg", "#E8F4FD"),
+        "color": social_link.get("color", "#0088cc")
+    }
+    social.append(new_social)
+    save_data("social_links", social)
+    logger.info(f"Admin {admin_user} added social link: {new_social['id']}")
+    return new_social
+
+@app.put("/api/admin/social/{social_id}")
+async def admin_update_social(social_id: str, social_link: Dict[str, Any], admin_user: str = Depends(get_admin_user)):
+    """Admin: Update social link"""
+    social = load_data("social_links")
+    for s in social:
+        if s["id"] == social_id:
+            s.update({
+                "icon": social_link.get("icon", s["icon"]),
+                "label": social_link.get("label", s["label"]),
+                "href": social_link.get("href", s["href"]),
+                "bg": social_link.get("bg", s.get("bg", "#E8F4FD")),
+                "color": social_link.get("color", s.get("color", "#0088cc"))
+            })
+            save_data("social_links", social)
+            logger.info(f"Admin {admin_user} updated social link: {social_id}")
+            return s
+    raise HTTPException(404, "Social link not found")
+
+@app.delete("/api/admin/social/{social_id}")
+async def admin_delete_social(social_id: str, admin_user: str = Depends(get_admin_user)):
+    """Admin: Delete social link"""
+    social = load_data("social_links")
+    before = len(social)
+    social = [s for s in social if s["id"] != social_id]
+    if len(social) == before:
+        raise HTTPException(404, "Social link not found")
+    save_data("social_links", social)
+    logger.info(f"Admin {admin_user} deleted social link: {social_id}")
+    return {"success": True}
+
+
+# ── 11. CLINIC SETTINGS MANAGEMENT ───────────────────────────
+
+@app.get("/api/admin/settings")
+async def admin_get_settings(admin_user: str = Depends(get_admin_user)):
+    """Admin: Get clinic settings"""
+    settings_data = load_data("settings")
+    return settings_data or {}
+
+@app.put("/api/admin/settings")
+async def admin_update_settings(settings_update: Dict[str, Any], admin_user: str = Depends(get_admin_user)):
+    """Admin: Update clinic settings"""
+    settings_data = load_data("settings") or {}
+    settings_data.update(settings_update)
+    save_data("settings", settings_data)
+    logger.info(f"Admin {admin_user} updated settings")
+    return settings_data
 
 
 if __name__ == "__main__":

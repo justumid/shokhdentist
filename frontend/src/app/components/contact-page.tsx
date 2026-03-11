@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Headphones } from "@phosphor-icons/react/dist/csr/Headphones";
 import { Stethoscope } from "@phosphor-icons/react/dist/csr/Stethoscope";
 import { Clock } from "@phosphor-icons/react/dist/csr/Clock";
@@ -9,58 +9,64 @@ import { XLogo } from "@phosphor-icons/react/dist/csr/XLogo";
 import { MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import { BuildingOffice } from "@phosphor-icons/react/dist/csr/BuildingOffice";
 
-export function ContactPage() {
-  const contacts = [
-    {
-      icon: Headphones,
-      label: "Telefon raqam",
-      value: "+998 95 227 77 22",
-      href: "tel:+998952277722",
-    },
-    {
-      icon: Stethoscope,
-      label: "Telegram (Shifokor)",
-      value: "@shokh_dentist",
-      href: "https://t.me/shokh_dentist",
-    },
-    {
-      icon: BuildingOffice,
-      label: "Manzil",
-      value: "Furqat ko'chasi 11a, Tashkent",
-      href: "https://maps.app.goo.gl/hE3doVgDdWxRNkqKA",
-    },
-  ];
+// Icon mapping
+const iconMap: Record<string, React.ElementType> = {
+  headphones: Headphones,
+  stethoscope: Stethoscope,
+  "building-office": BuildingOffice,
+  "map-pin": MapPin,
+  "telegram-logo": TelegramLogo,
+  "instagram-logo": InstagramLogo,
+  "facebook-logo": FacebookLogo,
+  "x-logo": XLogo,
+};
 
-  const socials = [
-    {
-      icon: TelegramLogo,
-      label: "Telegram",
-      href: "https://t.me/shokhdentist",
-      bg: "#E8F4FD",
-      color: "#0088cc",
-    },
-    {
-      icon: InstagramLogo,
-      label: "Instagram",
-      href: "https://instagram.com/shokhdentist",
-      bg: "#FDE8F0",
-      color: "#E1306C",
-    },
-    {
-      icon: FacebookLogo,
-      label: "Facebook",
-      href: "https://facebook.com/shokhdentist",
-      bg: "#E8EDF8",
-      color: "#1877F2",
-    },
-    {
-      icon: XLogo,
-      label: "Twitter",
-      href: "https://twitter.com/shokhdentist",
-      bg: "#E8F0F8",
-      color: "#14171A",
-    },
-  ];
+interface ContactItem {
+  id: string;
+  icon: string;
+  label: string;
+  value: string;
+  href: string;
+}
+
+interface SocialItem {
+  id: string;
+  icon: string;
+  label: string;
+  href: string;
+  bg: string;
+  color: string;
+}
+
+interface Settings {
+  working_hours?: string;
+  working_days?: string;
+}
+
+export function ContactPage() {
+  const [contacts, setContacts] = useState<ContactItem[]>([]);
+  const [socials, setSocials] = useState<SocialItem[]>([]);
+  const [settings, setSettings] = useState<Settings>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`${import.meta.env.VITE_API_URL}/api/contact`).then(res => res.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/social`).then(res => res.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/settings`).then(res => res.json())
+    ])
+      .then(([contactData, socialData, settingsData]) => {
+        setContacts(contactData.contacts || []);
+        setSocials(socialData.social || []);
+        setSettings(settingsData || {});
+      })
+      .catch(error => console.error("Failed to fetch contact data:", error))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div style={{ padding: 20, textAlign: "center" }}>Yuklanmoqda...</div>;
+  }
 
   return (
     <div
@@ -105,10 +111,10 @@ export function ContactPage() {
         }}
       >
         {contacts.map((c) => {
-          const Icon = c.icon;
+          const Icon = iconMap[c.icon] || Headphones;
           return (
             <a
-              key={c.value}
+              key={c.id}
               href={c.href}
               target={
                 c.href.startsWith("http") ? "_blank" : undefined
@@ -215,7 +221,7 @@ export function ContactPage() {
                 marginTop: 2,
               }}
             >
-              Dush–Shan, 9:00–19:00
+              {settings.working_days || "Dush–Shan"}, {settings.working_hours || "9:00–19:00"}
             </div>
           </div>
         </div>
@@ -250,10 +256,10 @@ export function ContactPage() {
             }}
           >
             {socials.map((s) => {
-              const Icon = s.icon;
+              const Icon = iconMap[s.icon] || TelegramLogo;
               return (
                 <a
-                  key={s.label}
+                  key={s.id}
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
