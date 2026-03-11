@@ -11,6 +11,11 @@ function getTelegramInitData(): string {
   return '';
 }
 
+// Check if running inside Telegram
+function isTelegramWebApp(): boolean {
+  return typeof window !== 'undefined' && !!(window as any).Telegram?.WebApp?.initData;
+}
+
 class ApiClient {
   private baseUrl: string;
   
@@ -27,8 +32,8 @@ class ApiClient {
     if (initData) {
       headers['Authorization'] = `tma ${initData}`;
     } else {
-      // Dev mode - use test user
-      headers['X-Dev-User-Id'] = '12345678';
+      // No authentication - will be rejected by backend in production
+      throw new Error('This app must be opened from Telegram');
     }
     
     return headers;
@@ -170,7 +175,8 @@ export class SlotWebSocket {
 
 // API methods
 export const api = {
-  init: () => apiClient.get<{ success: boolean; user: any }>('/api/init'),
+  isTelegramWebApp,
+  init: () => apiClient.get<{ success: boolean; user: any; isAdmin: boolean }>('/api/init'),
   getPatientState: () => apiClient.get<{ patientState: any; progress: any }>('/api/patient/state'),
   savePatientState: (data: any) => apiClient.post<{ success: boolean }>('/api/patient/state', data),
   createAppointment: (data: any) => apiClient.post<{ id: string; message: string }>('/api/appointments', data),
