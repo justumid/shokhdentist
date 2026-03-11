@@ -196,28 +196,42 @@ def get_telegram_user(
 
     # 2. Regular Telegram auth
     if not authorization:
-        # If no auth and no token, return a default dev user
-        if not BOT_TOKEN:
-            logger.debug("No auth header, returning default dev user")
-            return {
-                "id": 12345678,
-                "first_name": "Default",
-                "last_name": "Dev",
-                "username": "default_dev",
-                "is_dev": True
-            }
-        logger.warning("No authorization header provided")
-        return {}
+        # Production mode: always require authentication
+        if BOT_TOKEN:
+            logger.warning("No authorization header provided - authentication required")
+            raise HTTPException(
+                status_code=401,
+                detail="This app must be opened from Telegram bot"
+            )
+        # Development mode only: return default user if no BOT_TOKEN is set
+        logger.debug("No auth header, returning default dev user (DEV MODE)")
+        return {
+            "id": 12345678,
+            "first_name": "Default",
+            "last_name": "Dev",
+            "username": "default_dev",
+            "is_dev": True
+        }
     
     try:
         init_data = authorization.replace("tma ", "")
         user_data = validate_telegram_data(init_data)
-        if user_data:
-            logger.debug(f"Authenticated Telegram user: {user_data.get('id')}")
+        if not user_data:
+            logger.warning("Invalid Telegram authentication data")
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid Telegram authentication"
+            )
+        logger.debug(f"Authenticated Telegram user: {user_data.get('id')}")
         return user_data
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error parsing authorization: {e}")
-        return {}
+        raise HTTPException(
+            status_code=401,
+            detail="Failed to authenticate Telegram user"
+        )
 
 # Models
 class TelegramUser(BaseModel):

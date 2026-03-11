@@ -13,7 +13,13 @@ function getTelegramInitData(): string {
 
 // Check if running inside Telegram
 function isTelegramWebApp(): boolean {
-  return typeof window !== 'undefined' && !!(window as any).Telegram?.WebApp?.initData;
+  // Must have Telegram WebApp SDK loaded AND have initData
+  const hasTelegram = typeof window !== 'undefined' && !!(window as any).Telegram?.WebApp;
+  if (!hasTelegram) return false;
+  
+  const initData = (window as any).Telegram?.WebApp?.initData;
+  // initData must be present and non-empty (not just empty string)
+  return !!(initData && initData.length > 0);
 }
 
 class ApiClient {
