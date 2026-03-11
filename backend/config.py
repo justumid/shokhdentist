@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = ""  # Set in .env
     ADMIN_SECRET_KEY: str = ""  # For JWT tokens
+    ADMIN_CHAT_ID: str = ""  # Telegram chat ID of admin user
     
     # Database
     USE_DATABASE: bool = False

@@ -9,7 +9,9 @@ import { ServicesPage } from "./components/services-page";
 import { FormOverlay } from "./components/form-overlay";
 import { ProgramConditionsPage } from "./components/program-conditions-page";
 import { FaqPage } from "./components/faq-page";
+import { AdminPanel } from "./components/admin-panel";
 import { usePatientState, totalPct } from "./components/use-patient-state";
+import { api } from "./api/client";
 
 function DesktopBlocker() {
   return (
@@ -58,11 +60,28 @@ export default function App() {
   const [overlaySection, setOverlaySection] = useState<string | null>(null);
   const [showConditions, setShowConditions] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
   const { state, mergeState } = usePatientState();
 
   const showDot = totalPct(state) < 100;
+
+  // Initialize app and check admin status
+  useEffect(() => {
+    const initApp = async () => {
+      try {
+        const response = await api.init();
+        if (response.success && response.isAdmin) {
+          setIsAdmin(true);
+        }
+      } catch (error) {
+        console.error("Failed to initialize app:", error);
+      }
+    };
+    initApp();
+  }, []);
 
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth > 1024);
@@ -141,7 +160,11 @@ export default function App() {
           <ContactPage />
         </div>
         <div style={{ display: activeTab === "profile" ? "block" : "none", minHeight: "100%", animation: "fadeIn 0.28s ease" }}>
-          <ProfilePage state={state} onOpenSection={handleOpenSection} />
+          <ProfilePage 
+            state={state} 
+            onOpenSection={handleOpenSection}
+            onNavigateToAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
+          />
         </div>
         <div style={{ display: activeTab === "services" ? "block" : "none", minHeight: "100%", animation: "fadeIn 0.28s ease" }}>
           <ServicesPage />
@@ -175,6 +198,11 @@ export default function App() {
       {/* FAQ Page */}
       {showFaq && (
         <FaqPage onBack={() => setShowFaq(false)} />
+      )}
+
+      {/* Admin Panel */}
+      {showAdmin && isAdmin && (
+        <AdminPanel onBack={() => setShowAdmin(false)} />
       )}
 
       {/* Toast */}

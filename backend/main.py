@@ -386,26 +386,35 @@ async def init_app(telegram_user: Dict = Depends(get_telegram_user)):
             profiles = load_data("profiles")
             user_id = int(telegram_user.get("id", 0))
             
+            # Check if user is admin
+            is_admin = False
+            if settings.ADMIN_CHAT_ID:
+                admin_chat_ids = [id.strip() for id in settings.ADMIN_CHAT_ID.split(",")]
+                is_admin = str(user_id) in admin_chat_ids
+            
             profile = next((p for p in profiles if p["telegramUserId"] == user_id), None)
             if profile:
                 profile["lastActive"] = datetime.now().isoformat()
-                logger.info(f"User {user_id} session updated")
+                profile["isAdmin"] = is_admin
+                logger.info(f"User {user_id} session updated (admin={is_admin})")
             else:
                 profile = {
                     "telegramUserId": user_id,
                     "fullName": f"{telegram_user.get('first_name', '')} {telegram_user.get('last_name', '')}".strip(),
                     "username": telegram_user.get("username"),
+                    "isAdmin": is_admin,
                     "registeredAt": datetime.now().isoformat(),
                     "lastActive": datetime.now().isoformat()
                 }
                 profiles.append(profile)
-                logger.info(f"New user registered: {user_id}")
+                logger.info(f"New user registered: {user_id} (admin={is_admin})")
             
             save_data("profiles", profiles)
             
             return {
                 "success": True,
                 "user": profile,
+                "isAdmin": is_admin,
                 "telegramData": telegram_user
             }
         
