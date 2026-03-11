@@ -1783,7 +1783,131 @@ async def admin_delete_faq(faq_id: str,
     return {"success": True}
 
 
-# ── 8. STATISTIKA (Admin Stats) ───────────────────────────
+# ── 8. BROADCAST MESSAGES ───────────────────────────────
+
+class BroadcastMessageCreate(BaseModel):
+    message: str
+    target: str = "all"  # all, patients, programme_members
+    send_immediately: bool = True
+    scheduled_time: Optional[str] = None
+
+@app.post("/api/admin/broadcast")
+async def admin_send_broadcast(
+    body: BroadcastMessageCreate,
+    admin_user: str = Depends(get_admin_user)):
+    """
+    Admin: Send broadcast message to users via Telegram
+    Targets: all users, only patients, or only programme members
+    """
+    import aiohttp
+    
+    # Get all patient chat IDs
+    patients = load_data("patient_states")
+    appointments = load_data("appointments")
+    
+    # Determine target users
+    target_chat_ids = set()
+    
+    if body.target == "all":
+        # All registered users
+        target_chat_ids = {p.get("telegramUserId") for p in patients if p.get("telegramUserId")}
+    elif body.target == "patients":
+        # Users with appointments
+        appointment_user_ids = {a.get("telegramUserId") for a in appointments if a.get("telegramUserId")}
+        target_chat_ids = appointment_user_ids
+    elif body.target == "programme_members":
+        # Users with paid programme appointments
+        paid_apts = [a for a in appointments if a.get("type") == "paid"]
+        target_chat_ids = {a.get("telegramUserId") for a in paid_apts if a.get("telegramUserId")}
+    
+    # Remove None values
+    target_chat_ids = {cid for cid in target_chat_ids if cid}
+    
+    if not target_chat_ids:
+        raise HTTPException(400, "No target users found")
+    
+    # Send messages via Telegram Bot API
+    success_count = 0
+    failed_count = 0
+    failed_users = []
+    
+    if BOT_TOKEN:
+        async with aiohttp.ClientSession() as session:
+            for chat_id in target_chat_ids:
+                try:
+                    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+                    payload = {
+                        "chat_id": chat_id,
+                        "text": body.message,
+                        "parse_mode": "HTML"
+                    }
+                    async with session.post(url, json=payload) as resp:
+                        if resp.status == 200:
+                            success_count += 1
+                        else:
+                            failed_count += 1
+                            failed_users.append(chat_id)
+                            logger.warning(f"Failed to send message to {chat_id}: {await resp.text()}")
+                except Exception as e:
+                    failed_count += 1
+                    failed_users.append(chat_id)
+                    logger.error(f"Error sending message to {chat_id}: {e}")
+                
+                # Rate limiting to avoid Telegram API limits
+                await asyncio.sleep(0.05)  # 20 messages per second max
+    else:
+        # No BOT_TOKEN - just simulate
+        logger.warning("No BOT_TOKEN configured - broadcast message not sent")
+        success_count = len(target_chat_ids)
+    
+    # Save broadcast history
+    broadcasts = load_data("broadcasts")
+    broadcast_record = {
+        "id": str(uuid.uuid4()),
+        "message": body.message,
+        "target": body.target,
+        "targetCount": len(target_chat_ids),
+        "successCount": success_count,
+        "failedCount": failed_count,
+        "failedUsers": failed_users,
+        "sentBy": admin_user,
+        "sentAt": datetime.now().isoformat()
+    }
+    broadcasts.append(broadcast_record)
+    save_data("broadcasts", broadcasts)
+    
+    return {
+        "success": True,
+        "broadcast": broadcast_record,
+        "targetCount": len(target_chat_ids),
+        "successCount": success_count,
+        "failedCount": failed_count
+    }
+
+@app.get("/api/admin/broadcasts")
+async def admin_get_broadcasts(
+    limit: int = 50,
+    admin_user: str = Depends(get_admin_user)):
+    """Admin: Get broadcast history"""
+    broadcasts = load_data("broadcasts")
+    broadcasts.sort(key=lambda x: x.get("sentAt", ""), reverse=True)
+    return {"broadcasts": broadcasts[:limit]}
+
+@app.delete("/api/admin/broadcast/{broadcast_id}")
+async def admin_delete_broadcast(
+    broadcast_id: str,
+    admin_user: str = Depends(get_admin_user)):
+    """Admin: Delete broadcast from history"""
+    broadcasts = load_data("broadcasts")
+    before = len(broadcasts)
+    broadcasts = [b for b in broadcasts if b["id"] != broadcast_id]
+    if len(broadcasts) == before:
+        raise HTTPException(404, "Broadcast not found")
+    save_data("broadcasts", broadcasts)
+    return {"success": True}
+
+
+# ── 9. STATISTIKA (Admin Stats) ───────────────────────────
 
 @app.get("/api/admin/stats")
 async def admin_get_stats(

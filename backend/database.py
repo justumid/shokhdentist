@@ -83,7 +83,8 @@ def init_database():
             "team",
             "settings",
             "contact_info",
-            "social_links"
+            "social_links",
+            "broadcasts"
         ]
         
         for filename in data_files:

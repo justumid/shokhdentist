@@ -17,8 +17,10 @@ import { FirstAid } from "@phosphor-icons/react/dist/csr/FirstAid";
 import { Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
 import { HourglassSimple } from "@phosphor-icons/react/dist/csr/HourglassSimple";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { Megaphone } from "@phosphor-icons/react/dist/csr/Megaphone";
 import { Moon } from "@phosphor-icons/react/dist/csr/Moon";
 import { Pencil } from "@phosphor-icons/react/dist/csr/Pencil";
+import { PaperPlaneTilt } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
 import { Phone } from "@phosphor-icons/react/dist/csr/Phone";
 import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { Prohibit } from "@phosphor-icons/react/dist/csr/Prohibit";
@@ -427,6 +429,7 @@ type AdminTab =
   | "reviews"
   | "faq"
   | "users"
+  | "broadcast"
   | "statistics";
 
 const bottomTabs: {
@@ -453,6 +456,7 @@ const drawerTabs: {
   { id: "team", icon: Users, label: "Jamoa" },
   { id: "reviews", icon: Star, label: "Sharhlar" },
   { id: "faq", icon: Question, label: "FAQ" },
+  { id: "broadcast", icon: Megaphone, label: "Xabar yuborish" },
   { id: "statistics", icon: ChartBar, label: "Statistika" },
 ];
 
@@ -806,6 +810,8 @@ Boshqa: ${user.otherComplaint || "Yo'q"}
         return renderFaq();
       case "users":
         return renderUsers();
+      case "broadcast":
+        return renderBroadcast();
       case "statistics":
         return renderStatistics();
       default:
@@ -3877,6 +3883,230 @@ Boshqa: ${user.otherComplaint || "Yo'q"}
             ? "Muzlatishni olib tashlash"
             : "Bu kunni muzlatish"}
         </button>
+      </div>
+    );
+  };
+
+  /* ===== BROADCAST TAB ===== */
+  const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [broadcastTarget, setBroadcastTarget] = useState<"all" | "patients" | "programme_members">("all");
+  const [sendingBroadcast, setSendingBroadcast] = useState(false);
+  const [broadcastHistory, setBroadcastHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (activeTab === "broadcast") {
+      fetchBroadcastHistory();
+    }
+  }, [activeTab]);
+
+  const fetchBroadcastHistory = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/broadcasts`, {
+        headers: {
+          'Authorization': `tma ${(window as any).Telegram?.WebApp?.initData || ''}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBroadcastHistory(data.broadcasts || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch broadcast history:', error);
+    }
+  };
+
+  const handleSendBroadcast = async () => {
+    if (!broadcastMessage.trim()) {
+      alert("Iltimos, xabar matni kiriting");
+      return;
+    }
+
+    setSendingBroadcast(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/broadcast`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `tma ${(window as any).Telegram?.WebApp?.initData || ''}`
+        },
+        body: JSON.stringify({
+          message: broadcastMessage,
+          target: broadcastTarget,
+          send_immediately: true
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(`✅ Xabar yuborildi!\n\nYuborildi: ${data.successCount}\nXatolik: ${data.failedCount}`);
+        setBroadcastMessage("");
+        fetchBroadcastHistory();
+      } else {
+        const error = await response.json();
+        alert(`❌ Xatolik: ${error.detail || 'Xabar yuborishda xatolik'}`);
+      }
+    } catch (error) {
+      console.error('Broadcast error:', error);
+      alert("❌ Xabar yuborishda xatolik yuz berdi");
+    } finally {
+      setSendingBroadcast(false);
+    }
+  };
+
+  const renderBroadcast = () => {
+    const targetOptions = [
+      { value: "all", label: "Barcha foydalanuvchilar", icon: Users },
+      { value: "patients", label: "Qabulga yozilganlar", icon: CalendarCheck },
+      { value: "programme_members", label: "Dastur ishtirokchilari", icon: Crown }
+    ];
+
+    return (
+      <div style={{ padding: "16px 20px 0px 20px" }}>
+        {/* Header */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 20, fontWeight: 700, color: "#0E2A4A", marginBottom: 6 }}>
+            📢 Xabar yuborish
+          </div>
+          <div style={{ fontSize: 13, color: "#6B8099" }}>
+            Foydalanuvchilarga Telegram orqali xabar yuboring
+          </div>
+        </div>
+
+        {/* Target Selection */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#0E2A4A", marginBottom: 10 }}>
+            Kimga yuborilsin?
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {targetOptions.map((opt) => {
+              const Icon = opt.icon;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setBroadcastTarget(opt.value as any)}
+                  style={{
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    background: broadcastTarget === opt.value ? "#E0F5F3" : "white",
+                    border: `1.5px solid ${broadcastTarget === opt.value ? "#00A896" : "#C8D8E8"}`,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <Icon size={20} weight={broadcastTarget === opt.value ? "fill" : "regular"} color={broadcastTarget === opt.value ? "#00A896" : "#6B8099"} />
+                  <div style={{ flex: 1, textAlign: "left", fontSize: 14, fontWeight: 600, color: broadcastTarget === opt.value ? "#00A896" : "#0E2A4A" }}>
+                    {opt.label}
+                  </div>
+                  {broadcastTarget === opt.value && <CheckCircle size={20} weight="fill" color="#00A896" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Message Input */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#0E2A4A", marginBottom: 10 }}>
+            Xabar matni
+          </div>
+          <textarea
+            value={broadcastMessage}
+            onChange={(e) => setBroadcastMessage(e.target.value)}
+            placeholder="Xabar matnini kiriting..."
+            style={{
+              width: "100%",
+              minHeight: 120,
+              padding: "12px 16px",
+              borderRadius: 12,
+              border: "1.5px solid #C8D8E8",
+              fontSize: 14,
+              fontFamily: "inherit",
+              resize: "vertical",
+              outline: "none"
+            }}
+          />
+          <div style={{ fontSize: 12, color: "#6B8099", marginTop: 6 }}>
+            {broadcastMessage.length} / 4096 belgi
+          </div>
+        </div>
+
+        {/* Send Button */}
+        <button
+          onClick={handleSendBroadcast}
+          disabled={sendingBroadcast || !broadcastMessage.trim()}
+          style={{
+            width: "100%",
+            padding: "14px",
+            borderRadius: 12,
+            background: sendingBroadcast || !broadcastMessage.trim() ? "#C8D8E8" : "#00A896",
+            color: "white",
+            border: "none",
+            fontSize: 15,
+            fontWeight: 600,
+            cursor: sendingBroadcast || !broadcastMessage.trim() ? "not-allowed" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            marginBottom: 24
+          }}
+        >
+          <PaperPlaneTilt size={20} weight="fill" />
+          {sendingBroadcast ? "Yuborilmoqda..." : "Xabar yuborish"}
+        </button>
+
+        {/* Broadcast History */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#0E2A4A", marginBottom: 12 }}>
+            Yuborilgan xabarlar tarixi
+          </div>
+          {broadcastHistory.length === 0 ? (
+            <div style={{ 
+              textAlign: "center", 
+              padding: "40px 20px", 
+              color: "#6B8099",
+              fontSize: 14
+            }}>
+              Hali xabarlar yuborilmagan
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {broadcastHistory.map((broadcast) => (
+                <div
+                  key={broadcast.id}
+                  style={{
+                    padding: "14px 16px",
+                    borderRadius: 12,
+                    background: "white",
+                    border: "1.5px solid #C8D8E8"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 8 }}>
+                    <div style={{ fontSize: 12, color: "#6B8099" }}>
+                      {new Date(broadcast.sentAt).toLocaleString('uz-UZ')}
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#00A896" }}>
+                      ✓ {broadcast.successCount} / {broadcast.targetCount}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 14, color: "#0E2A4A", marginBottom: 8, lineHeight: 1.5 }}>
+                    {broadcast.message.length > 100 ? broadcast.message.substring(0, 100) + "..." : broadcast.message}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#6B8099" }}>
+                    Maqsad: {
+                      broadcast.target === "all" ? "Barcha foydalanuvchilar" :
+                      broadcast.target === "patients" ? "Qabulga yozilganlar" :
+                      "Dastur ishtirokchilari"
+                    }
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   };
