@@ -868,112 +868,135 @@ async def create_review(
 
 @app.get("/api/services")
 async def get_services():
-    """Get services catalog"""
-    return {
-        "categories": [
-            {
-                "id": "terapevtik",
-                "name": "Terapevtik stomatologiya",
-                "icon": "🦷",
-                "services": [
-                    {"id": "cons", "name": "Konsultatsiya", "price": "100 000"},
-                    {"id": "karies", "name": "Karies davolash", "price": "200 000+"},
-                    {"id": "plomba_de", "name": "Svet plomba (Germany)", "price": "400 000"},
-                    {"id": "plomba_jp", "name": "Svet plomba (Japan)", "price": "500 000 – 600 000"},
-                    {"id": "plomba_us", "name": "Svet plomba (USA)", "price": "800 000"},
-                    {"id": "nerve_1", "name": "Nerv davolash 1-kanal", "price": "400 000"},
-                    {"id": "nerve_3", "name": "Nerv davolash 3-kanal", "price": "600 000"},
-                    {"id": "rest", "name": "Restavratsiya", "price": "600 000 – 900 000"},
-                    {"id": "whit", "name": "Oqartirish", "price": "3 000 000"}
-                ]
-            },
-            {
-                "id": "jarrohlik",
-                "name": "Jarrohlik stomatologiyasi",
-                "icon": "💉",
-                "services": [
-                    {"id": "extr", "name": "Tish sug'urish", "price": "300 000"},
-                    {"id": "extr_c", "name": "Murakkab sug'urish", "price": "300 000 – 500 000"},
-                    {"id": "wisdom", "name": "Aql tishi", "price": "400 000 – 600 000"},
-                    {"id": "retin", "name": "Retinatsiyalangan tish", "price": "700 000"},
-                    {"id": "resec", "name": "Rezektsiya", "price": "1 500 000"},
-                    {"id": "implant", "name": "Implant (Osstem)", "price": "4 800 000"}
-                ]
-            },
-            {
-                "id": "ortopedik",
-                "name": "Ortopedik stomatologiya",
-                "icon": "👑",
-                "services": [
-                    {"id": "meta", "name": "Metallokeramika koronka", "price": "800 000 – 1 000 000"},
-                    {"id": "impl_c", "name": "Implantga koronka", "price": "1 200 000 – 3 000 000"},
-                    {"id": "zirk", "name": "Zirkon koronka (ZrO2)", "price": "2 000 000 – 3 200 000"},
-                    {"id": "temp", "name": "Vaqtinchalik koronka", "price": "300 000"},
-                    {"id": "part", "name": "Qisman olinadigan protez", "price": "2 000 000 – 3 500 000"},
-                    {"id": "byug", "name": "Byugel protez", "price": "5 500 000"}
-                ]
-            },
-            {
-                "id": "gigiyena",
-                "name": "Gigiyena va parvarish",
-                "icon": "✨",
-                "services": [
-                    {"id": "cl_uz", "name": "Tozalash (UZ)", "price": "400 000"},
-                    {"id": "cl_af", "name": "Tozalash (Airflow)", "price": "600 000"},
-                    {"id": "poli", "name": "Polirovka", "price": "100 000"},
-                    {"id": "fluor", "name": "Ftorlak", "price": "150 000"},
-                    {"id": "shin", "name": "Shinlash (6 tish)", "price": "400 000"}
-                ]
-            }
-        ]
-    }
+    """Get services catalog - loads from database or returns defaults"""
+    # Try to load from database first
+    services_data = load_data("services")
+    
+    # If database has custom services, return them
+    if services_data:
+        return {"categories": services_data}
+    
+    # Otherwise return default services
+    default_services = [
+        {
+            "id": "terapevtik",
+            "name": "Terapevtik stomatologiya",
+            "icon": "tooth",
+            "description": "Karies davolash, plombalar va tish nervini davolash",
+            "services": [
+                {"id": "cons", "name": "Konsultatsiya", "price": "100 000"},
+                {"id": "karies", "name": "Karies davolash", "price": "200 000+"},
+                {"id": "plomba_de", "name": "Svet plomba (Germany)", "price": "400 000"},
+                {"id": "plomba_jp", "name": "Svet plomba (Japan)", "price": "500 000 – 600 000"},
+                {"id": "plomba_us", "name": "Svet plomba (USA)", "price": "800 000"},
+                {"id": "nerve_1", "name": "Nerv davolash 1-kanal", "price": "400 000"},
+                {"id": "nerve_3", "name": "Nerv davolash 3-kanal", "price": "600 000"},
+                {"id": "rest", "name": "Restavratsiya", "price": "600 000 – 900 000"},
+                {"id": "whit", "name": "Oqartirish", "price": "3 000 000"}
+            ]
+        },
+        {
+            "id": "jarrohlik",
+            "name": "Jarrohlik stomatologiyasi",
+            "icon": "syringe",
+            "description": "Tish sug'urish, implantatsiya va jarrohlik amaliyotlar",
+            "services": [
+                {"id": "extr", "name": "Tish sug'urish", "price": "300 000"},
+                {"id": "extr_c", "name": "Murakkab sug'urish", "price": "300 000 – 500 000"},
+                {"id": "wisdom", "name": "Aql tishi", "price": "400 000 – 600 000"},
+                {"id": "retin", "name": "Retinatsiyalangan tish", "price": "700 000"},
+                {"id": "resec", "name": "Rezektsiya", "price": "1 500 000"},
+                {"id": "implant", "name": "Implant (Osstem)", "price": "4 800 000"}
+            ]
+        },
+        {
+            "id": "ortopedik",
+            "name": "Ortopedik stomatologiya",
+            "icon": "crown",
+            "description": "Koronkalar, protezlar va tish tiklash",
+            "services": [
+                {"id": "meta", "name": "Metallokeramika koronka", "price": "800 000 – 1 000 000"},
+                {"id": "impl_c", "name": "Implantga koronka", "price": "1 200 000 – 3 000 000"},
+                {"id": "zirk", "name": "Zirkon koronka (ZrO2)", "price": "2 000 000 – 3 200 000"},
+                {"id": "temp", "name": "Vaqtinchalik koronka", "price": "300 000"},
+                {"id": "part", "name": "Qisman olinadigan protez", "price": "2 000 000 – 3 500 000"},
+                {"id": "byug", "name": "Byugel protez", "price": "5 500 000"}
+            ]
+        },
+        {
+            "id": "gigiyena",
+            "name": "Gigiyena va parvarish",
+            "icon": "sparkle",
+            "description": "Professional tozalash, polirovka va profilaktika",
+            "services": [
+                {"id": "cl_uz", "name": "Tozalash (UZ)", "price": "400 000"},
+                {"id": "cl_af", "name": "Tozalash (Airflow)", "price": "600 000"},
+                {"id": "poli", "name": "Polirovka", "price": "100 000"},
+                {"id": "fluor", "name": "Ftorlak", "price": "150 000"},
+                {"id": "shin", "name": "Shinlash (6 tish)", "price": "400 000"}
+            ]
+        }
+    ]
+    
+    # Save defaults to database for future edits
+    save_data("services", default_services)
+    
+    return {"categories": default_services}
 
 @app.get("/api/team")
 async def get_team():
-    """Get team members"""
-    return {
-        "team": [
-            {
-                "id": "dr_shakhbozbek",
-                "name": "Dr. Shakhbozbek",
-                "role": "Bosh shifokor",
-                "experience": "8 yil tajriba",
-                "description": "Bosh shifokor",
-                "gradient": ["#0E2A4A", "#163859"]
-            },
-            {
-                "id": "dr_nilufar",
-                "name": "Dr. Nilufar",
-                "role": "Ortodont",
-                "experience": "5 yil tajriba",
-                "description": "Breket va Invisalign",
-                "gradient": ["#4A1B6B", "#6B2490"]
-            },
-            {
-                "id": "dr_bobur",
-                "name": "Dr. Bobur",
-                "role": "Implantolog",
-                "experience": "6 yil tajriba",
-                "description": "Implantatsiya va Jarrohlik",
-                "gradient": ["#1B4A6B", "#1C6B9A"]
-            },
-            {
-                "id": "dr_zulfiya",
-                "name": "Dr. Zulfiya",
-                "role": "Parodontolog",
-                "experience": "4 yil tajriba",
-                "description": "Milk kasalliklari davolash",
-                "gradient": ["#1B6B3A", "#25964F"]
-            }
-        ]
-    }
+    """Get team members - loads from database or returns defaults"""
+    team_data = load_data("team")
+    
+    # If database has custom team, return it
+    if team_data:
+        return {"team": team_data}
+    
+    # Otherwise return default team and save it
+    default_team = [
+        {
+            "id": "dr_shakhbozbek",
+            "name": "Dr. Shakhbozbek",
+            "role": "Bosh shifokor",
+            "experience": "8 yil tajriba",
+            "description": "Bosh shifokor",
+            "gradient": ["#0E2A4A", "#163859"]
+        },
+        {
+            "id": "dr_nilufar",
+            "name": "Dr. Nilufar",
+            "role": "Ortodont",
+            "experience": "5 yil tajriba",
+            "description": "Breket va Invisalign",
+            "gradient": ["#4A1B6B", "#6B2490"]
+        },
+        {
+            "id": "dr_bobur",
+            "name": "Dr. Bobur",
+            "role": "Implantolog",
+            "experience": "6 yil tajriba",
+            "description": "Implantatsiya va Jarrohlik",
+            "gradient": ["#1B4A6B", "#1C6B9A"]
+        },
+        {
+            "id": "dr_zulfiya",
+            "name": "Dr. Zulfiya",
+            "role": "Parodontolog",
+            "experience": "4 yil tajriba",
+            "description": "Milk kasalliklari davolash",
+            "gradient": ["#1B6B3A", "#25964F"]
+        }
+    ]
+    
+    save_data("team", default_team)
+    return {"team": default_team}
 
 @app.get("/api/faq")
 async def get_faq():
     """Get FAQ items - loads from admin-managed FAQ list"""
-    faq = load_data("faq_override")
+    faq = load_data("faqs")
     
-    # If no FAQs exist, return default ones
+    # If no FAQs exist, return default ones and save them
     if not faq:
         faq = [
             {"id": str(i+1), "q": q, "a": a, "category": "umumiy"}
@@ -1000,6 +1023,7 @@ async def get_faq():
                 ("Masofaviy konsultatsiya bormi?", "Ha, Telegram orqali dastlabki maslahat olishingiz mumkin. Lekin aniq tashxis qo'yish uchun klinikaga kelish tavsiya etiladi.")
             ])
         ]
+        save_data("faqs", faq)
     
     return {"faq": faq}
 
@@ -1468,7 +1492,7 @@ class ServiceItemCreate(BaseModel):
 async def admin_add_service_category(body: ServiceCategoryCreate,
     admin_user: str = Depends(get_admin_user)):
     """Admin: Add a new service category. UI: '+ Kategoriya' button."""
-    services = load_data("services_override")
+    services = load_data("services")
     new_cat = {
         "id": str(uuid.uuid4()),
         "name": body.name,
@@ -1478,7 +1502,7 @@ async def admin_add_service_category(body: ServiceCategoryCreate,
         "createdAt": datetime.now().isoformat()
     }
     services.append(new_cat)
-    save_data("services_override", services)
+    save_data("services", services)
     return {"success": True, "category": new_cat}
 
 
@@ -1486,7 +1510,7 @@ async def admin_add_service_category(body: ServiceCategoryCreate,
 async def admin_add_service(body: ServiceItemCreate,
     admin_user: str = Depends(get_admin_user)):
     """Admin: Add a service to a category. UI: '+ Xizmat qo'shish' button."""
-    services = load_data("services_override")
+    services = load_data("services")
     for cat in services:
         if cat["id"] == body.categoryId:
             new_service = {
@@ -1497,7 +1521,7 @@ async def admin_add_service(body: ServiceItemCreate,
                 "createdAt": datetime.now().isoformat()
             }
             cat.setdefault("services", []).append(new_service)
-            save_data("services_override", services)
+            save_data("services", services)
             return {"success": True, "service": new_service}
     raise HTTPException(404, "Category not found")
 
@@ -1506,13 +1530,13 @@ async def admin_add_service(body: ServiceItemCreate,
 async def admin_update_service(service_id: str, body: Dict[str, Any],
     admin_user: str = Depends(get_admin_user)):
     """Admin: Update a service item."""
-    services = load_data("services_override")
+    services = load_data("services")
     for cat in services:
         for svc in cat.get("services", []):
             if svc["id"] == service_id:
                 svc.update({k: v for k, v in body.items() if k != "id"})
                 svc["updatedAt"] = datetime.now().isoformat()
-                save_data("services_override", services)
+                save_data("services", services)
                 return {"success": True, "service": svc}
     raise HTTPException(404, "Service not found")
 
@@ -1521,12 +1545,12 @@ async def admin_update_service(service_id: str, body: Dict[str, Any],
 async def admin_delete_service(service_id: str,
     admin_user: str = Depends(get_admin_user)):
     """Admin: Delete a service item."""
-    services = load_data("services_override")
+    services = load_data("services")
     for cat in services:
         before = len(cat.get("services", []))
         cat["services"] = [s for s in cat.get("services", []) if s["id"] != service_id]
         if len(cat["services"]) < before:
-            save_data("services_override", services)
+            save_data("services", services)
             return {"success": True}
     raise HTTPException(404, "Service not found")
 
@@ -1631,7 +1655,7 @@ class FAQCreate(BaseModel):
 async def admin_add_faq(body: FAQCreate,
     admin_user: str = Depends(get_admin_user)):
     """Admin: Add a new FAQ. UI: '+ Savol qo'shish' button."""
-    faq = load_data("faq_override")
+    faq = load_data("faqs")
     new_item = {
         "id": str(uuid.uuid4()),
         "q": body.q,
@@ -1640,7 +1664,7 @@ async def admin_add_faq(body: FAQCreate,
         "createdAt": datetime.now().isoformat()
     }
     faq.append(new_item)
-    save_data("faq_override", faq)
+    save_data("faqs", faq)
     return {"success": True, "item": new_item}
 
 
@@ -1648,12 +1672,12 @@ async def admin_add_faq(body: FAQCreate,
 async def admin_update_faq(faq_id: str, body: Dict[str, Any],
     admin_user: str = Depends(get_admin_user)):
     """Admin: Update a FAQ item."""
-    faq = load_data("faq_override")
+    faq = load_data("faqs")
     for item in faq:
         if item["id"] == faq_id:
             item.update({k: v for k, v in body.items() if k != "id"})
             item["updatedAt"] = datetime.now().isoformat()
-            save_data("faq_override", faq)
+            save_data("faqs", faq)
             return {"success": True, "item": item}
     raise HTTPException(404, "FAQ not found")
 
@@ -1662,12 +1686,12 @@ async def admin_update_faq(faq_id: str, body: Dict[str, Any],
 async def admin_delete_faq(faq_id: str,
     admin_user: str = Depends(get_admin_user)):
     """Admin: Delete a FAQ item."""
-    faq = load_data("faq_override")
+    faq = load_data("faqs")
     before = len(faq)
     faq = [f for f in faq if f["id"] != faq_id]
     if len(faq) == before:
         raise HTTPException(404, "FAQ not found")
-    save_data("faq_override", faq)
+    save_data("faqs", faq)
     return {"success": True}
 
 
@@ -1690,7 +1714,7 @@ async def admin_get_stats(
     reviews = load_data("reviews")
     patients = load_data("patient_states")
     admin_slots = load_data("admin_slots")
-    services_data = load_data("services_override")
+    services_data = load_data("services")
 
     # Apply date filters
     if date_from:
@@ -1756,7 +1780,7 @@ async def admin_get_stats(
 async def admin_get_services(admin_user: str = Depends(get_admin_user)):
     """Admin: Get services (from override or inline data)."""
     logger.info(f"Admin '{admin_user}' fetching services")
-    services = load_data("services_override")
+    services = load_data("services")
     if not services:
         # Return inline services data
         services_response = await get_services()
@@ -1785,7 +1809,7 @@ async def admin_get_all_reviews(admin_user: str = Depends(get_admin_user)):
 async def admin_get_faq(admin_user: str = Depends(get_admin_user)):
     """Admin: Get FAQ items (from override or inline data)."""
     logger.info(f"Admin '{admin_user}' fetching FAQ")
-    faq = load_data("faq_override")
+    faq = load_data("faqs")
     if not faq:
         # Return inline FAQ data
         faq_response = await get_faq()

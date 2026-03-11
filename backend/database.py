@@ -75,6 +75,28 @@ def init_database():
     else:
         logger.info("Using JSON file storage")
         DATA_DIR.mkdir(exist_ok=True)
+        
+        # Initialize default content files if they don't exist
+        default_files = {
+            "services": [],
+            "faqs": [],
+            "team": [],
+            "reviews": [],
+            "settings": {
+                "clinic_name": "Shokh Dentist",
+                "clinic_address": "Toshkent, O'zbekiston",
+                "clinic_phone": "+998 90 123 45 67",
+                "clinic_email": "info@shokhdentist.uz",
+                "working_hours": "9:00 - 18:00",
+                "working_days": "Dushanba - Shanba"
+            }
+        }
+        
+        for filename, default_data in default_files.items():
+            file_path = DATA_DIR / f"{filename}.json"
+            if not file_path.exists():
+                file_path.write_text(json.dumps(default_data, indent=2, ensure_ascii=False))
+                logger.info(f"Created default {filename}.json")
 
 # Database models (for PostgreSQL migration)
 if DATABASE_AVAILABLE:

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tooth } from "@phosphor-icons/react/dist/csr/Tooth";
 import { Syringe } from "@phosphor-icons/react/dist/csr/Syringe";
 import { Crown } from "@phosphor-icons/react/dist/csr/Crown";
@@ -7,8 +7,10 @@ import { CaretUp } from "@phosphor-icons/react/dist/csr/CaretUp";
 import { CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 
 interface Service {
+  id?: string;
   name: string;
   price: string;
+  description?: string;
 }
 
 interface Category {
@@ -20,106 +22,59 @@ interface Category {
   services: Service[];
 }
 
-const categories: Category[] = [
-  {
-    id: "terapevtik",
-    icon: Tooth,
-    iconColor: "#1FA89A",
-    title: "Terapevtik stomatologiya",
-    subtitle:
-      "Karies davolash, plombalar va tish nervini davolash",
-    services: [
-      { name: "Konsultatsiya", price: "100 000" },
-      { name: "Karies davolash", price: "200 000 dan" },
-      { name: "Svet plomba (Germaniya)", price: "400 000" },
-      {
-        name: "Svet plomba (Yaponiya)",
-        price: "500 000 – 600 000",
-      },
-      { name: "Svet plomba (AQSh)", price: "800 000" },
-      { name: "Nerv davolash (1 kanal)", price: "400 000" },
-      { name: "Nerv davolash (3 kanal)", price: "600 000" },
-      { name: "Restavratsiya", price: "600 000 – 900 000" },
-      { name: "Oqartirish", price: "3 000 000" },
-    ],
-  },
-  {
-    id: "jarrohlik",
-    icon: Syringe,
-    iconColor: "#1FA89A",
-    title: "Jarrohlik stomatologiyasi",
-    subtitle:
-      "Tish sug'urish, implantatsiya va jarrohlik amaliyotlar",
-    services: [
-      { name: "Tish sug'urish", price: "300 000" },
-      {
-        name: "Murakkab sug'urish",
-        price: "300 000 – 500 000",
-      },
-      {
-        name: "Aql tishini olib tashlash",
-        price: "400 000 – 600 000",
-      },
-      { name: "Retinatsiyalangan tish", price: "700 000" },
-      { name: "Rezektsiya", price: "1 500 000" },
-      { name: "Implant (Osstem) to'liq", price: "4 800 000" },
-    ],
-  },
-  {
-    id: "ortopedik",
-    icon: Crown,
-    iconColor: "#1FA89A",
-    title: "Ortopedik stomatologiya",
-    subtitle: "Koronkalar, protezlar va tish tiklash",
-    services: [
-      {
-        name: "Metallokeramika koronka",
-        price: "800 000 – 1 000 000",
-      },
-      {
-        name: "Implantga koronka",
-        price: "1 200 000 – 3 000 000",
-      },
-      {
-        name: "Zirkon koronka (ZrO2)",
-        price: "2 000 000 – 3 200 000",
-      },
-      { name: "Vaqtinchalik koronka", price: "300 000" },
-      {
-        name: "Qisman olinadigan protez",
-        price: "2 000 000 – 3 500 000",
-      },
-      { name: "Byugel protez", price: "5 500 000" },
-    ],
-  },
-  {
-    id: "gigiyena",
-    icon: Sparkle,
-    iconColor: "#1FA89A",
-    title: "Gigiyena va parvarish",
-    subtitle:
-      "Professional tozalash, polirovka va profilaktika",
-    services: [
-      { name: "Professional tozalash (UZ)", price: "400 000" },
-      {
-        name: "Professional tozalash (Airflow)",
-        price: "600 000",
-      },
-      { name: "Polirovka", price: "100 000" },
-      { name: "Ftorlak qoplash", price: "150 000" },
-      { name: "Shinlash (6 tish)", price: "400 000" },
-    ],
-  },
-];
+// Icon mapping for dynamic categories
+const iconMap: Record<string, React.ElementType> = {
+  tooth: Tooth,
+  syringe: Syringe,
+  crown: Crown,
+  sparkle: Sparkle,
+};
 
 export function ServicesPage() {
-  const [openId, setOpenId] = useState<string | null>(
-    "terapevtik",
-  );
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/services`)
+      .then(res => res.json())
+      .then(data => {
+        const apiCategories = (data.categories || []).map((cat: any) => ({
+          id: cat.id,
+          icon: iconMap[cat.icon] || Tooth,
+          iconColor: "#1FA89A",
+          title: cat.name,
+          subtitle: cat.description || "",
+          services: cat.services || []
+        }));
+        setCategories(apiCategories);
+        if (apiCategories.length > 0) {
+          setOpenId(apiCategories[0].id);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to load services:", err);
+        setLoading(false);
+      });
+  }, []);
 
   const toggle = (id: string) => {
     setOpenId((prev) => (prev === id ? null : id));
   };
+
+  if (loading) {
+    return (
+      <div style={{ 
+        fontFamily: "'DM Sans', sans-serif",
+        padding: "40px 20px",
+        textAlign: "center",
+        color: "#6B8099"
+      }}>
+        Yuklanmoqda...
+      </div>
+    );
+  }
 
   return (
     <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
