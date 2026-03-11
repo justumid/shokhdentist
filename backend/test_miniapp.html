@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShokhDentist - Test Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .button {
+            background: var(--tg-theme-button-color, #007AFF);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .button:hover {
+            opacity: 0.8;
+        }
+        .status {
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦷 ShokhDentist Test</h1>
+        
+        <div class="card">
+            <h3>Telegram User Info</h3>
+            <div id="userInfo">Loading...</div>
+        </div>
+
+        <div class="card">
+            <h3>API Tests</h3>
+            <button class="button" onclick="testInit()">Test Init API</button>
+            <button class="button" onclick="testPatientState()">Test Patient State</button>
+            <button class="button" onclick="testSlots()">Test Available Slots</button>
+            <button class="button" onclick="testServices()">Test Services</button>
+            <button class="button" onclick="testReviews()">Test Reviews</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const API_BASE = 'http://localhost:8000';
+        
+        // Initialize Telegram WebApp
+        tg.ready();
+        tg.expand();
+
+        // Display user info
+        document.getElementById('userInfo').innerHTML = `
+            <pre>${JSON.stringify({
+                initData: tg.initData,
+                user: tg.initDataUnsafe.user,
+                platform: tg.platform,
+                version: tg.version
+            }, null, 2)}</pre>
+        `;
+
+        function showResult(title, data, isError = false) {
+            const results = document.getElementById('results');
+            const statusClass = isError ? 'error' : 'success';
+            results.innerHTML = `
+                <div class="card">
+                    <div class="status ${statusClass}">${title}</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            ` + results.innerHTML;
+        }
+
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: {
+                        'Authorization': `tma ${tg.initData}`,
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${data.detail || 'Unknown error'}`);
+                }
+                
+                return data;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        async function testInit() {
+            try {
+                const data = await apiCall('/api/init');
+                showResult('✅ Init API Success', data);
+            } catch (error) {
+                showResult('❌ Init API Error', { error: error.message }, true);
+            }
+        }
+
+        async function testPatientState() {
+            try {
+                // Get current state
+                const currentState = await apiCall('/api/patient/state');
+                showResult('📋 Current Patient State', currentState);
+                
+                // Save test data
+                const testData = {
+                    fullName: "Test User",
+                    phone: "+998901234567",
+                    birthDate: "1990-01-01",
+                    diabet: false,
+                    heart: false,
+                    bp: false,
+                    toothpain: true,
+                    gumbleed: false,
+                    photoConsent: true,
+                    requestType: "free"
+                };
+                
+                const saveResult = await apiCall('/api/patient/state', {
+                    method: 'POST',
+                    body: JSON.stringify(testData)
+                });
+                
+                showResult('💾 Save Patient State Success', saveResult);
+            } catch (error) {
+                showResult('❌ Patient State Error', { error: error.message }, true);
+            }
+        }
+
+        async function testSlots() {
+            try {
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const dateStr = tomorrow.toISOString().split('T')[0];
+                
+                const data = await apiCall(`/api/slots/available?date=${dateStr}`);
+                showResult('🕐 Available Slots', data);
+            } catch (error) {
+                showResult('❌ Slots Error', { error: error.message }, true);
+            }
+        }
+
+        async function testServices() {
+            try {
+                const data = await apiCall('/api/services');
+                showResult('🛠️ Services', data);
+            } catch (error) {
+                showResult('❌ Services Error', { error: error.message }, true);
+            }
+        }
+
+        async function testReviews() {
+            try {
+                const data = await apiCall('/api/reviews');
+                showResult('⭐ Reviews', data);
+            } catch (error) {
+                showResult('❌ Reviews Error', { error: error.message }, true);
+            }
+        }
+
+        // Auto-test init on load
+        setTimeout(testInit, 1000);
+    </script>
+</body>
+</html>

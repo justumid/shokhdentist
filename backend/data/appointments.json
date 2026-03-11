@@ -1,0 +1,20 @@
+[
+  {
+    "id": "apt_test_12345",
+    "patientId": "patient_test_001",
+    "type": "free",
+    "date": "2026-03-15",
+    "time": "10:00",
+    "status": "pending",
+    "patientName": "Sardor Toxirov",
+    "phone": "+998901234567",
+    "birthYear": 1995,
+    "gender": "male",
+    "complaints": ["Tish og'rig'i", "Mollyar tishi buzilgan"],
+    "service": "Bepul konsultatsiya",
+    "doctorName": "Dr. Shokh Abdurahmonov",
+    "notes": "Chapda yuqori tish og'riyapti, 3 kundan beri",
+    "createdAt": "2026-03-11T14:40:00Z",
+    "updatedAt": "2026-03-11T14:40:00Z"
+  }
+]

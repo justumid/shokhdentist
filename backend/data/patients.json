@@ -1,0 +1,20 @@
+[
+  {
+    "id": "patient_test_001",
+    "fullName": "Sardor Toxirov",
+    "phone": "+998901234567",
+    "birthYear": 1995,
+    "gender": "male",
+    "complaints": ["Tish og'rig'i", "Mollyar tishi buzilgan"],
+    "previousTreatments": ["Plomba qo'yish", "Tish tozalash"],
+    "allergies": ["Penitsylin"],
+    "chronicDiseases": ["Qandli diabet"],
+    "currentMedications": ["Insulin 500mg"],
+    "isProgrammeParticipant": true,
+    "discountApplied": 20,
+    "programmeStartDate": "2026-01-15",
+    "additionalInfo": "Har kuni ertalab og'riyapti, ayniqsa issiq va sovuq narsalar iste'mol qilganda",
+    "email": "sardor@example.uz",
+    "createdAt": "2026-03-11T14:00:00Z"
+  }
+]

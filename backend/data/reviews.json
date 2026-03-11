@@ -1,0 +1,28 @@
+[
+  {
+    "id": "e4122702-83ec-4ef2-bf55-50c5429afd08",
+    "name": "Happy Patient",
+    "rating": 5,
+    "tags": [
+      "Mehribon shifokorlar"
+    ],
+    "text": "Excellent service!",
+    "telegramUserId": null,
+    "date": "2026-03-11T14:07:47.652589",
+    "verified": false,
+    "hidden": false
+  },
+  {
+    "id": "86119a39-ce2d-4c30-90bf-76e11bc53498",
+    "name": "Happy Patient",
+    "rating": 5,
+    "tags": [
+      "Mehribon shifokorlar"
+    ],
+    "text": "Excellent service!",
+    "telegramUserId": null,
+    "date": "2026-03-11T14:29:07.046088",
+    "verified": false,
+    "hidden": false
+  }
+]

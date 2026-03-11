@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Slot Updates - ShokhDentist</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--tg-theme-bg-color, #f5f5f5);
+            color: var(--tg-theme-text-color, #000000);
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .header {
+            background: var(--tg-theme-secondary-bg-color, #ffffff);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        .connecting { background: #fff3cd; color: #856404; }
+        
+        .date-selector {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .time-periods {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .period {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .period-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #333;
+        }
+        .slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .slot {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .slot.available {
+            background: #e3f2fd;
+            border-color: #2196F3;
+            color: #1976D2;
+        }
+        .slot.available:hover {
+            background: #2196F3;
+            color: white;
+            transform: scale(1.05);
+        }
+        .slot.booked {
+            background: #f5f5f5;
+            border-color: #ccc;
+            color: #999;
+            cursor: not-allowed;
+            position: relative;
+        }
+        .slot.booked::after {
+            content: '🔒';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 10px;
+        }
+        .slot.selected {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+        }
+        .slot.just-booked {
+            animation: bookingPulse 1s ease-in-out;
+        }
+        .slot.just-freed {
+            animation: freedPulse 1s ease-in-out;
+        }
+        
+        @keyframes bookingPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); background: #ff9800; }
+        }
+        @keyframes freedPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); background: #4CAF50; }
+        }
+        
+        .activity-log {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .activity-log h3 {
+            margin-top: 0;
+            font-size: 16px;
+            color: #333;
+        }
+        .log-entry {
+            padding: 8px 12px;
+            border-left: 3px solid #2196F3;
+            margin-bottom: 8px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .log-entry.booking {
+            border-color: #ff9800;
+        }
+        .log-entry.cancellation {
+            border-color: #4CAF50;
+        }
+        .timestamp {
+            color: #999;
+            font-size: 11px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2196F3;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🦷 Real-time Slot Updates</h1>
+            <div>
+                Connection: 
+                <span id="connectionStatus" class="status-badge connecting">Connecting...</span>
+            </div>
+            <div style="margin-top: 8px; font-size: 12px; color: #666;">
+                Updates will appear instantly when slots are booked/cancelled
+            </div>
+        </div>
+
+        <div class="date-selector">
+            <label for="dateSelect" style="display: block; margin-bottom: 8px; font-weight: 600;">
+                📅 Select Date:
+            </label>
+            <select id="dateSelect">
+                <option value="">Loading dates...</option>
+            </select>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalSlots">0</div>
+                <div class="stat-label">Total Slots</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="availableSlots">0</div>
+                <div class="stat-label">Available</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="bookedSlots">0</div>
+                <div class="stat-label">Booked</div>
+            </div>
+        </div>
+
+        <div id="timePeriods" class="time-periods" style="margin-top: 20px;">
+            <!-- Slots will be inserted here -->
+        </div>
+
+        <div class="activity-log">
+            <h3>📊 Activity Log</h3>
+            <div id="activityLog">
+                <div class="log-entry">Waiting for updates...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const WS_BASE = 'ws://localhost:8000';
+        let socket = null;
+        let currentDate = null;
+        let slotsData = {};
+
+        // Initialize Telegram WebApp (if available)
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        // Update connection status
+        function updateStatus(status) {
+            const badge = document.getElementById('connectionStatus');
+            badge.className = `status-badge ${status}`;
+            badge.textContent = status === 'connected' ? 'Connected ✓' : 
+                               status === 'disconnected' ? 'Disconnected ✗' : 
+                               'Connecting...';
+        }
+
+        // Add log entry
+        function addLog(message, type = 'info') {
+            const logDiv = document.getElementById('activityLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `
+                ${message}
+                <div class="timestamp">${new Date().toLocaleTimeString()}</div>
+            `;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+            
+            // Keep only last 10 entries
+            while (logDiv.children.length > 10) {
+                logDiv.removeChild(logDiv.lastChild);
+            }
+        }
+
+        // Update stats
+        function updateStats() {
+            let total = 0, available = 0, booked = 0;
+            
+            Object.values(slotsData).forEach(period => {
+                period.forEach(slot => {
+                    total++;
+                    if (slot.booked) booked++;
+                    else available++;
+                });
+            });
+            
+            document.getElementById('totalSlots').textContent = total;
+            document.getElementById('availableSlots').textContent = available;
+            document.getElementById('bookedSlots').textContent = booked;
+        }
+
+        // Render time slots
+        function renderSlots(timeSlots) {
+            const container = document.getElementById('timePeriods');
+            container.innerHTML = '';
+            
+            slotsData = {};
+            
+            timeSlots.forEach(period => {
+                const periodDiv = document.createElement('div');
+                periodDiv.className = 'period';
+                
+                const title = document.createElement('div');
+                title.className = 'period-title';
+                title.textContent = period.label;
+                periodDiv.appendChild(title);
+                
+                const slotsDiv = document.createElement('div');
+                slotsDiv.className = 'slots';
+                
+                slotsData[period.period] = period.slots;
+                
+                period.slots.forEach(slot => {
+                    const slotDiv = document.createElement('div');
+                    slotDiv.className = `slot ${slot.booked ? 'booked' : 'available'}`;
+                    slotDiv.textContent = slot.time;
+                    slotDiv.dataset.time = slot.time;
+                    slotDiv.dataset.period = period.period;
+                    slotsDiv.appendChild(slotDiv);
+                });
+                
+                periodDiv.appendChild(slotsDiv);
+                container.appendChild(periodDiv);
+            });
+            
+            updateStats();
+        }
+
+        // Handle slot updates from WebSocket
+        function handleSlotUpdate(data) {
+            console.log('Slot update received:', data);
+            
+            if (data.type === 'slot_booked') {
+                addLog(`🔒 Slot ${data.time} was just booked!`, 'booking');
+                animateSlotChange(data.time, true);
+            } else if (data.type === 'slot_cancelled') {
+                addLog(`✅ Slot ${data.time} is now available!`, 'cancellation');
+                animateSlotChange(data.time, false);
+            }
+            
+            // Update slot status
+            const slotElements = document.querySelectorAll(`.slot[data-time="${data.time}"]`);
+            slotElements.forEach(el => {
+                const isBooked = data.availableSlots.includes(data.time);
+                el.className = `slot ${isBooked ? 'booked' : 'available'}`;
+                
+                // Update internal data
+                const period = el.dataset.period;
+                if (slotsData[period]) {
+                    const slotData = slotsData[period].find(s => s.time === data.time);
+                    if (slotData) slotData.booked = isBooked;
+                }
+            });
+            
+            updateStats();
+        }
+
+        // Animate slot change
+        function animateSlotChange(time, wasBooked) {
+            const slotElements = document.querySelectorAll(`.slot[data-time="${time}"]`);
+            slotElements.forEach(el => {
+                el.classList.add(wasBooked ? 'just-booked' : 'just-freed');
+                setTimeout(() => {
+                    el.classList.remove('just-booked', 'just-freed');
+                }, 1000);
+            });
+        }
+
+        // Connect to WebSocket
+        function connectWebSocket(date) {
+            if (socket) {
+                socket.close();
+            }
+            
+            updateStatus('connecting');
+            socket = new WebSocket(`${WS_BASE}/ws/slots/${date}`);
+            
+            socket.onopen = () => {
+                updateStatus('connected');
+                addLog(`📡 Connected to real-time updates for ${date}`);
+                
+                // Send ping every 30 seconds to keep connection alive
+                setInterval(() => {
+                    if (socket.readyState === WebSocket.OPEN) {
+                        socket.send('ping');
+                    }
+                }, 30000);
+            };
+            
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'initial') {
+                    renderSlots(data.timeSlots);
+                    addLog(`📥 Loaded ${data.timeSlots.length} time periods`);
+                } else if (data.type === 'slot_booked' || data.type === 'slot_cancelled') {
+                    handleSlotUpdate(data);
+                } else if (data.type === 'pong') {
+                    console.log('Ping response received');
+                }
+            };
+            
+            socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                addLog('❌ Connection error occurred', 'error');
+            };
+            
+            socket.onclose = () => {
+                updateStatus('disconnected');
+                addLog('🔌 Disconnected from server');
+                
+                // Auto-reconnect after 3 seconds
+                setTimeout(() => {
+                    if (currentDate) {
+                        addLog('🔄 Attempting to reconnect...');
+                        connectWebSocket(currentDate);
+                    }
+                }, 3000);
+            };
+        }
+
+        // Load available dates
+        async function loadDates() {
+            try {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const dateStr = tomorrow.toISOString().split('T')[0];
+                
+                const response = await fetch(`${API_BASE}/api/slots/available?date=${dateStr}`);
+                const data = await response.json();
+                
+                const select = document.getElementById('dateSelect');
+                select.innerHTML = '';
+                
+                data.dates.forEach(date => {
+                    const option = document.createElement('option');
+                    option.value = date;
+                    option.textContent = new Date(date).toLocaleDateString('uz-UZ', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    select.appendChild(option);
+                });
+                
+                // Auto-select first date
+                if (data.dates.length > 0) {
+                    select.value = data.dates[0];
+                    currentDate = data.dates[0];
+                    connectWebSocket(currentDate);
+                }
+            } catch (error) {
+                console.error('Error loading dates:', error);
+                addLog('❌ Failed to load dates', 'error');
+            }
+        }
+
+        // Date change handler
+        document.getElementById('dateSelect').addEventListener('change', (e) => {
+            currentDate = e.target.value;
+            if (currentDate) {
+                connectWebSocket(currentDate);
+            }
+        });
+
+        // Initialize
+        loadDates();
+        addLog('🚀 Application started');
+    </script>
+</body>
+</html>

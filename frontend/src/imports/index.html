@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Shokh Dentist</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#1FA89A; --teal-2:#25C4B4; --teal-light:#E0F5F3; --teal-pale:#EEF7F9;
+  --navy:#0E2A4A; --navy-2:#163859; --navy-3:#1C4470;
+  --gold:#C9A84C; --dark:#0E2A4A; --mid:#163859; --gray:#6B8099;
+  --line:#C8D8E8; --white:#F5F9FC; --red:#C0392B;
+  --safe: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--white);color:var(--dark);overflow:hidden;}
+#app{display:flex;flex-direction:column;height:100%;height:100dvh;}
+#view{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;}
+
+/* TAB BAR */
+#tabbar{display:flex;border-top:1px solid var(--line);background:rgba(245,249,252,0.97);backdrop-filter:blur(12px);padding-bottom:var(--safe);flex-shrink:0;z-index:50;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 8px;cursor:pointer;position:relative;}
+.tab-icon{font-size:20px;line-height:1;}
+.tab-label{font-size:10px;font-weight:500;color:var(--gray);letter-spacing:0.3px;}
+.tab.active .tab-label{color:var(--teal);}
+.tab-dot{position:absolute;top:8px;right:calc(50% - 14px);width:6px;height:6px;background:var(--gold);border-radius:50%;display:none;}
+.tab-dot.show{display:block;}
+
+/* PAGES */
+.page{display:none;min-height:100%;}
+.page.active{display:block;animation:fadeIn 0.28s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* HOME */
+.hero{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-3) 100%);padding:36px 24px 48px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.04);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.85);padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:0.5px;margin-bottom:18px;}
+.hero-title{font-family:'Playfair Display',serif;font-size:32px;color:white;line-height:1.2;margin-bottom:12px;letter-spacing:-0.3px;}
+.hero-title em{color:var(--teal-2);font-style:italic;}
+.hero-sub{font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:28px;}
+.hero-cta{display:inline-flex;align-items:center;gap:8px;background:white;color:var(--teal);padding:12px 22px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:'Outfit',sans-serif;}
+.hero-cta:active{transform:scale(0.97);}
+.section{padding:24px 20px 0;}
+.section-title{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);margin-bottom:14px;}
+.services-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;}
+.service-card{background:white;border:1.5px solid var(--line);border-radius:14px;padding:16px 14px;}
+.service-card:active{border-color:var(--teal);}
+.service-icon{font-size:26px;margin-bottom:10px;}
+.service-name{font-size:13px;font-weight:600;margin-bottom:4px;}
+.service-price{font-size:12px;color:var(--teal);font-weight:600;}
+.team-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;scrollbar-width:none;margin:0 -20px;padding-left:20px;padding-right:20px;}
+.team-scroll::-webkit-scrollbar{display:none;}
+.team-card{background:white;border:1.5px solid var(--line);border-radius:14px;padding:16px;min-width:140px;flex-shrink:0;text-align:center;}
+.team-avatar{width:52px;height:52px;border-radius:50%;background:var(--teal-light);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 10px;}
+.team-name{font-size:13px;font-weight:600;margin-bottom:3px;}
+.team-role{font-size:11px;color:var(--gray);}
+.why-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.why-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--teal-pale);border-radius:12px;}
+.why-icon{font-size:22px;flex-shrink:0;}
+.why-text{font-size:13.5px;line-height:1.4;}
+.why-text strong{display:block;margin-bottom:2px;}
+.why-text span{color:var(--gray);font-size:12.5px;}
+
+/* APPOINTMENT */
+.appt-hero{background:var(--teal-pale);border-bottom:1px solid var(--line);padding:28px 20px 24px;}
+.appt-hero h2{font-family:'Playfair Display',serif;font-size:24px;margin-bottom:6px;}
+.appt-hero p{font-size:13.5px;color:var(--gray);}
+.incomplete-banner{margin:20px;background:white;border:1.5px solid var(--gold);border-radius:14px;padding:18px;display:flex;gap:14px;align-items:flex-start;cursor:pointer;}
+.incomplete-banner:active{background:#FFFDF5;}
+.banner-icon{width:40px;height:40px;background:#FEF9EC;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.banner-text{flex:1;}
+.banner-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+.banner-sub{font-size:12.5px;color:var(--gray);line-height:1.5;}
+.banner-progress{height:4px;background:var(--line);border-radius:2px;margin-top:10px;overflow:hidden;}
+.banner-progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.4s ease;}
+.appt-form-wrap{padding:0 20px 20px;}
+
+/* PROFILE */
+.profile-header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);padding:32px 20px 28px;}
+.profile-avatar{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:14px;}
+.profile-name{font-family:'Playfair Display',serif;font-size:22px;color:white;margin-bottom:4px;}
+.profile-sub{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:18px;}
+.progress-track{background:rgba(255,255,255,0.1);border-radius:4px;height:6px;overflow:hidden;margin-bottom:6px;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--teal-2),#A8D8D2);border-radius:4px;transition:width 0.6s cubic-bezier(0.4,0,0.2,1);}
+.progress-label{font-size:12px;color:rgba(255,255,255,0.55);}
+.profile-sections{padding:16px 20px 80px;}
+.profile-section{background:white;border:1.5px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden;cursor:pointer;}
+.profile-section:active{border-color:var(--teal);}
+.ps-header{display:flex;align-items:center;gap:12px;padding:16px;}
+.ps-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ps-icon.done{background:#EAF7EE;} .ps-icon.partial{background:#FEF9EC;} .ps-icon.empty{background:var(--teal-light);}
+.ps-info{flex:1;}
+.ps-title{font-size:14px;font-weight:600;margin-bottom:2px;}
+.ps-status{font-size:12px;}
+.ps-status.done{color:#2D8A4B;} .ps-status.partial{color:#A07A1A;} .ps-status.empty{color:var(--gray);}
+.ps-arrow{color:var(--gray);font-size:16px;}
+.ps-mini-progress{height:3px;background:var(--line);margin:0 16px 14px;border-radius:2px;overflow:hidden;}
+.ps-mini-fill{height:100%;border-radius:2px;background:var(--teal-2);transition:width 0.4s ease;}
+.ps-mini-fill.gold{background:var(--gold);}
+
+/* CONTACT */
+.contact-hero{background:var(--navy);padding:32px 20px 28px;}
+.contact-hero h2{font-family:'Playfair Display',serif;font-size:24px;color:white;margin-bottom:6px;}
+.contact-hero p{font-size:13px;color:rgba(255,255,255,0.5);}
+.contact-cards{padding:20px;display:flex;flex-direction:column;gap:10px;}
+.contact-card{background:white;border:1.5px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--dark);}
+.contact-card:active{background:var(--teal-pale);}
+.contact-card-icon{width:42px;height:42px;border-radius:12px;background:var(--teal-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.contact-card-info{flex:1;}
+.contact-card-label{font-size:11px;color:var(--gray);font-weight:500;letter-spacing:0.5px;text-transform:uppercase;}
+.contact-card-value{font-size:14px;font-weight:600;margin-top:2px;}
+.map-placeholder{margin:0 20px 20px;background:var(--teal-light);border-radius:14px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--teal);cursor:pointer;border:1.5px solid var(--line);}
+.map-icon{font-size:36px;}
+.price-table{margin:0 20px 80px;background:white;border:1.5px solid var(--line);border-radius:14px;overflow:hidden;}
+.price-table-header{padding:14px 18px;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);border-bottom:1px solid var(--line);background:var(--teal-pale);}
+.price-row{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);font-size:13.5px;}
+.price-row:last-child{border-bottom:none;}
+.price-row-cost{font-weight:600;color:var(--teal);}
+
+/* FORM OVERLAY */
+#formOverlay{position:fixed;inset:0;background:var(--white);z-index:200;display:none;flex-direction:column;}
+#formOverlay.open{display:flex;animation:slideUp 0.3s ease;}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.overlay-header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--white);flex-shrink:0;}
+.overlay-back{width:34px;height:34px;background:var(--teal-light);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;border:none;}
+.overlay-back:active{background:var(--line);}
+.overlay-title{font-size:15px;font-weight:600;flex:1;}
+.overlay-step{font-size:12px;color:var(--gray);}
+.overlay-progress{height:2px;background:var(--line);flex-shrink:0;}
+.overlay-progress-fill{height:100%;background:var(--teal);transition:width 0.4s ease;}
+.overlay-body{flex:1;overflow-y:auto;padding:24px 20px 20px;-webkit-overflow-scrolling:touch;}
+.overlay-footer{padding:14px 20px;padding-bottom:calc(14px + var(--safe));border-top:1px solid var(--line);background:var(--white);flex-shrink:0;}
+
+/* FORM ELEMENTS */
+.form-section-title{font-family:'Playfair Display',serif;font-size:22px;margin-bottom:6px;}
+.form-section-sub{font-size:13px;color:var(--gray);line-height:1.6;margin-bottom:24px;}
+.field-group{display:flex;flex-direction:column;gap:16px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field-label{font-size:13px;font-weight:500;color:var(--dark);}
+.field-label .req{color:var(--teal);}
+input[type="text"],input[type="tel"],input[type="email"],input[type="date"],textarea{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;color:var(--dark);background:white;outline:none;transition:border-color 0.2s;-webkit-appearance:none;}
+input:focus,textarea:focus{border-color:var(--teal);}
+textarea{resize:vertical;min-height:80px;}
+.sep{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:2px;margin-top:6px;}
+.toggle-group{display:flex;gap:8px;}
+.tog{flex:1;padding:10px 8px;border:1.5px solid var(--line);border-radius:9px;background:white;font-family:'Outfit',sans-serif;font-size:13.5px;color:var(--gray);cursor:pointer;font-weight:500;transition:all 0.15s;}
+.tog.yes{background:var(--teal-light);border-color:var(--teal);color:var(--teal);}
+.tog.no{background:#FFF0EF;border-color:#E8A09A;color:var(--red);}
+.radio-group{display:flex;flex-direction:column;gap:8px;}
+.radio-opt{display:flex;align-items:center;gap:11px;padding:10px 13px;border:1.5px solid var(--line);border-radius:9px;cursor:pointer;font-size:13.5px;}
+.radio-opt:has(input:checked){border-color:var(--teal);background:var(--teal-light);}
+.radio-opt input[type="radio"]{accent-color:var(--teal);}
+.check-opt{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--teal-pale);border:1.5px solid var(--line);border-radius:10px;cursor:pointer;font-size:13.5px;line-height:1.5;}
+.check-opt:has(input:checked){border-color:var(--teal);background:var(--teal-light);}
+.check-opt input{accent-color:var(--teal);margin-top:3px;flex-shrink:0;}
+.consent-box{background:var(--teal-pale);border:1.5px solid var(--line);border-radius:12px;padding:16px;font-size:13px;line-height:1.7;margin-bottom:14px;}
+.consent-box ul{margin:8px 0 0 18px;}
+.consent-box ul li{margin-bottom:3px;}
+.btn-primary{width:100%;padding:14px;background:var(--teal);color:white;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.btn-primary:active{background:var(--navy);transform:scale(0.99);}
+.btn-ghost{width:100%;padding:12px;background:transparent;color:var(--gray);border:none;font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;margin-top:8px;}
+.success-state{text-align:center;padding:40px 24px;}
+.success-ring{width:72px;height:72px;border-radius:50%;background:var(--teal-light);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;}
+.success-state h3{font-family:'Playfair Display',serif;font-size:24px;margin-bottom:10px;}
+.success-state p{font-size:14px;color:var(--gray);line-height:1.6;}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="view">
+
+    <!-- HOME PAGE -->
+    <div class="page active" id="page-home">
+      <div class="hero">
+        <div class="hero-badge"><span style="color:var(--teal-2);font-weight:700;">SHOKH</span> <span style="color:rgba(255,255,255,0.7);">•DENTIST</span></div>
+        <h1 class="hero-title">Sog'lom <em>tabassum</em> — hayot sifati</h1>
+        <p class="hero-sub">Zamonaviy stomatologiya. Ilg'or texnologiyalar. Mehrli munosabat.</p>
+        <button class="hero-cta" onclick="openTab('appt')">Qabul belgilash →</button>
+      </div>
+      <div class="section"><div class="section-title">Xizmatlar</div></div>
+      <div class="services-grid" style="padding:0 20px 24px;">
+        <div class="service-card"><div class="service-icon">🔍</div><div class="service-name">Konsultatsiya</div><div class="service-price">Bepul</div></div>
+        <div class="service-card"><div class="service-icon">✨</div><div class="service-name">Tish tozalash</div><div class="service-price">150 000 so'm</div></div>
+        <div class="service-card"><div class="service-icon">🦷</div><div class="service-name">Plomba</div><div class="service-price">200 000 so'm</div></div>
+        <div class="service-card"><div class="service-icon">👑</div><div class="service-name">Toj (korona)</div><div class="service-price">800 000 so'm</div></div>
+        <div class="service-card"><div class="service-icon">🌿</div><div class="service-name">Oqartirish</div><div class="service-price">500 000 so'm</div></div>
+        <div class="service-card"><div class="service-icon">🔧</div><div class="service-name">Ortodontiya</div><div class="service-price">Narx so'rash</div></div>
+      </div>
+      <div class="section"><div class="section-title">Jamoamiz</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 24px;">
+        <div style="background:white;border:1.5px solid var(--line);border-radius:16px;padding:20px 16px;text-align:center;">
+          <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--navy-2));display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 12px;">👨‍⚕️</div>
+          <div style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px;">Dr. Shakhbozbek</div>
+          <div style="font-size:11px;font-weight:600;color:var(--teal);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">Bosh shifokor</div>
+          <div style="font-size:11px;color:var(--gray);line-height:1.5;">Stomatolog-terapevt · 8 yil tajriba</div>
+        </div>
+        <div style="background:white;border:1.5px solid var(--line);border-radius:16px;padding:20px 16px;text-align:center;">
+          <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#4A1B6B,#6B2490);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 12px;">👩‍⚕️</div>
+          <div style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px;">Dr. Nilufar</div>
+          <div style="font-size:11px;font-weight:600;color:var(--teal);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">Ortodont</div>
+          <div style="font-size:11px;color:var(--gray);line-height:1.5;">Breket va Invisalign · 5 yil tajriba</div>
+        </div>
+        <div style="background:white;border:1.5px solid var(--line);border-radius:16px;padding:20px 16px;text-align:center;">
+          <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#1B4A6B,#1C6B9A);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 12px;">👨‍⚕️</div>
+          <div style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px;">Dr. Bobur</div>
+          <div style="font-size:11px;font-weight:600;color:var(--teal);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">Implantolog</div>
+          <div style="font-size:11px;color:var(--gray);line-height:1.5;">Dental implant · 6 yil tajriba</div>
+        </div>
+        <div style="background:white;border:1.5px solid var(--line);border-radius:16px;padding:20px 16px;text-align:center;">
+          <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#1B6B3A,#25964F);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 12px;">👩‍⚕️</div>
+          <div style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px;">Dr. Zulfiya</div>
+          <div style="font-size:11px;font-weight:600;color:var(--teal);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">Parodontolog</div>
+          <div style="font-size:11px;color:var(--gray);line-height:1.5;">Milk kasalliklari · 4 yil tajriba</div>
+        </div>
+      </div>
+      <div class="section" style="margin-top:20px;">
+        <div class="section-title">Nega biz?</div>
+        <div class="why-list">
+          <div class="why-item"><div class="why-icon">🛡️</div><div class="why-text"><strong>Sterillizatsiya kafolati</strong><span>Har bir asbob individual paketda</span></div></div>
+          <div class="why-item"><div class="why-icon">💻</div><div class="why-text"><strong>Raqamli rentgen</strong><span>Minimal nurlanish, tez natija</span></div></div>
+          <div class="why-item"><div class="why-icon">📅</div><div class="why-text"><strong>6 oylik profilaktik dastur</strong><span>Muntazam ko'rik + bepul cleaning</span></div></div>
+          <div class="why-item"><div class="why-icon">⏱️</div><div class="why-text"><strong>Kutish vaqti minimal</strong><span>Qabul vaqti aniq belgilanadi</span></div></div>
+        </div>
+      </div>
+      <div style="height:80px;"></div>
+    </div>
+
+    <!-- APPOINTMENT PAGE -->
+    <div class="page" id="page-appt">
+      <div class="appt-hero"><h2>Qabul belgilash</h2><p>Shifokor siz bilan bog'lanib, vaqtni kelishadi.</p></div>
+      <div id="apptBanner"></div>
+      <div class="appt-form-wrap" id="apptFormWrap" style="display:none;"></div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div class="page" id="page-profile">
+      <div class="profile-header">
+        <div class="profile-avatar">🦷</div>
+        <div class="profile-name" id="profileName">Bemor</div>
+        <div class="profile-sub" id="profileSub">Profilingizni to'ldiring</div>
+        <div class="progress-track"><div class="progress-fill" id="profileProgressFill" style="width:0%"></div></div>
+        <div class="progress-label" id="profileProgressLabel">0% to'ldirilgan</div>
+      </div>
+      <div class="profile-sections" id="profileSections"></div>
+    </div>
+
+    <!-- CONTACT PAGE -->
+    <div class="page" id="page-contact">
+      <div class="contact-hero"><h2>Aloqa</h2><p>Tashkent sh., Chilonzor tumani</p></div>
+      <div class="contact-cards">
+        <a class="contact-card" href="tel:+998990120357"><div class="contact-card-icon">📞</div><div class="contact-card-info"><div class="contact-card-label">Telefon 1</div><div class="contact-card-value">+998 99 012 03 57</div></div></a>
+        <a class="contact-card" href="tel:+998987073311"><div class="contact-card-icon">📞</div><div class="contact-card-info"><div class="contact-card-label">Telefon 2</div><div class="contact-card-value">+998 98 707 33 11</div></div></a>
+        <a class="contact-card" href="https://t.me/shokh_dentist" target="_blank"><div class="contact-card-icon">👨‍⚕️</div><div class="contact-card-info"><div class="contact-card-label">Telegram (Shifokor)</div><div class="contact-card-value">@shokh_dentist</div></div></a>
+        <div class="contact-card"><div class="contact-card-icon">🕐</div><div class="contact-card-info"><div class="contact-card-label">Ish vaqti</div><div class="contact-card-value">Dush–Shan, 9:00–19:00</div></div></div>
+        <div style="display:flex;gap:10px;">
+          <a href="https://t.me/shokhdentist" target="_blank" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px;background:white;border:1.5px solid var(--line);border-radius:14px;text-decoration:none;color:var(--dark);">
+            <div style="width:42px;height:42px;border-radius:12px;background:#E8F4FD;display:flex;align-items:center;justify-content:center;font-size:22px;">✈️</div>
+            <span style="font-size:11px;font-weight:600;color:var(--gray);">Telegram</span>
+          </a>
+          <a href="https://instagram.com/shokhdentist" target="_blank" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px;background:white;border:1.5px solid var(--line);border-radius:14px;text-decoration:none;color:var(--dark);">
+            <div style="width:42px;height:42px;border-radius:12px;background:#FDE8F0;display:flex;align-items:center;justify-content:center;font-size:22px;">📸</div>
+            <span style="font-size:11px;font-weight:600;color:var(--gray);">Instagram</span>
+          </a>
+          <a href="https://facebook.com/shokhdentist" target="_blank" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px;background:white;border:1.5px solid var(--line);border-radius:14px;text-decoration:none;color:var(--dark);">
+            <div style="width:42px;height:42px;border-radius:12px;background:#E8EDF8;display:flex;align-items:center;justify-content:center;font-size:22px;">👥</div>
+            <span style="font-size:11px;font-weight:600;color:var(--gray);">Facebook</span>
+          </a>
+          <a href="https://twitter.com/shokhdentist" target="_blank" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px;background:white;border:1.5px solid var(--line);border-radius:14px;text-decoration:none;color:var(--dark);">
+            <div style="width:42px;height:42px;border-radius:12px;background:#E8F0F8;display:flex;align-items:center;justify-content:center;font-size:22px;">🐦</div>
+            <span style="font-size:11px;font-weight:600;color:var(--gray);">Twitter</span>
+          </a>
+        </div>
+      </div>
+      <div class="map-placeholder" onclick="openMap()"><div class="map-icon">📍</div><span style="font-size:13px;font-weight:500;">Xaritada ko'rish</span><span style="font-size:12px;color:var(--gray)">Chilonzor, 7-mavze</span></div>
+      <div style="height:80px;"></div>
+    </div>
+
+  </div><!-- /view -->
+
+  <!-- TAB BAR -->
+  <div id="tabbar">
+    <div class="tab active" id="tab-home" onclick="openTab('home')"><div class="tab-icon">🏠</div><div class="tab-label">Asosiy</div></div>
+    <div class="tab" id="tab-appt" onclick="openTab('appt')"><div class="tab-icon">📅</div><div class="tab-label">Qabul</div></div>
+    <div class="tab" id="tab-contact" onclick="openTab('contact')"><div class="tab-icon">📞</div><div class="tab-label">Aloqa</div></div>
+    <div class="tab" id="tab-profile" onclick="openTab('profile')"><div class="tab-icon">👤</div><div class="tab-label">Profil</div><div class="tab-dot" id="profileDot"></div></div>
+  </div>
+</div>
+
+<!-- FORM OVERLAY -->
+<div id="formOverlay">
+  <div class="overlay-header">
+    <button class="overlay-back" id="overlayBack">←</button>
+    <div class="overlay-title" id="overlayTitle">Profil</div>
+    <div class="overlay-step" id="overlayStep"></div>
+  </div>
+  <div class="overlay-progress"><div class="overlay-progress-fill" id="overlayProgressFill" style="width:0%"></div></div>
+  <div class="overlay-body" id="overlayBody"></div>
+  <div class="overlay-footer" id="overlayFooter"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Telegram init ────────────────────────────────────────────
+const twa = window.Telegram?.WebApp;
+if (twa) { twa.ready(); twa.expand(); }
+const initData = twa?.initData || '';
+const tgUser = twa?.initDataUnsafe?.user || {};
+
+// ── Persistent state ─────────────────────────────────────────
+const SK = 'shokh_v2';
+function loadState() { try { return JSON.parse(localStorage.getItem(SK)||'{}'); } catch { return {}; } }
+function saveState(d) { localStorage.setItem(SK, JSON.stringify(d)); }
+let S = loadState();
+
+// ── Section definitions ──────────────────────────────────────
+const SECTIONS = [
+  { id:'personal', title:"Shaxsiy ma'lumotlar", icon:'👤', weight:30 },
+  { id:'medical',  title:'Tibbiy tarix',         icon:'🏥', weight:20 },
+  { id:'dental',   title:'Tish tarixi',           icon:'🦷', weight:20 },
+  { id:'consent',  title:'Tasdiqlash',            icon:'📋', weight:10 },
+  { id:'consult',  title:'Konsultatsiya anketa',  icon:'📝', weight:20 },
+];
+const REQ = {
+  personal:['fullName','phone','birthDate'],
+  medical: ['diabet','heart','bp'],
+  dental:  ['toothpain','gumbleed'],
+  consent: ['photoConsent','programConsent'],
+  consult: ['bleedDur'],
+};
+
+function pct(id) {
+  const r = REQ[id]; if(!r) return 0;
+  return Math.round(r.filter(k => S[k]!==undefined && S[k]!=='' && S[k]!==null).length/r.length*100);
+}
+function totalPct() { return Math.round(SECTIONS.reduce((t,s)=>t+(pct(s.id)/100)*s.weight,0)); }
+function status(id) { const p=pct(id); return p===100?'done':p>0?'partial':'empty'; }
+
+// ── Tab navigation ───────────────────────────────────────────
+function openTab(n) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  document.getElementById('tab-'+n).classList.add('active');
+  document.getElementById('view').scrollTop=0;
+  if(n==='profile') renderProfile();
+  if(n==='appt') renderAppt();
+}
+
+function updateDot() { document.getElementById('profileDot').classList.toggle('show', totalPct()<100); }
+
+// ── Profile page ─────────────────────────────────────────────
+function renderProfile() {
+  const p = totalPct();
+  const name = S.fullName || tgUser.first_name || 'Bemor';
+  document.getElementById('profileName').textContent = name;
+  document.getElementById('profileSub').textContent = p<100 ? "Profilingizni to'ldiring" : "Profil to'liq ✓";
+  document.getElementById('profileProgressFill').style.width = p+'%';
+  document.getElementById('profileProgressLabel').textContent = p+"% to'ldirilgan";
+  document.getElementById('profileSections').innerHTML = SECTIONS.map(s=>{
+    const st=status(s.id), pc=pct(s.id);
+    const txt = st==='done'?"✓ To'ldirilgan":st==='partial'?'Davom etish':"To'ldirilmagan";
+    return `<div class="profile-section" onclick="openSection('${s.id}')">
+      <div class="ps-header">
+        <div class="ps-icon ${st}">${s.icon}</div>
+        <div class="ps-info"><div class="ps-title">${s.title}</div><div class="ps-status ${st}">${txt}</div></div>
+        <div class="ps-arrow">›</div>
+      </div>
+      ${pc>0&&pc<100?`<div class="ps-mini-progress"><div class="ps-mini-fill gold" style="width:${pc}%"></div></div>`:''}
+      ${pc===100?`<div class="ps-mini-progress"><div class="ps-mini-fill" style="width:100%"></div></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── Appointment page ─────────────────────────────────────────
+function renderAppt() {
+  const p = totalPct();
+  const banner = document.getElementById('apptBanner');
+  const fw = document.getElementById('apptFormWrap');
+
+  banner.innerHTML = '';
+
+  if (!S.hasSubmitted) {
+    fw.style.display = 'block';
+    fw.innerHTML = renderEmptyState();
+  } else if (p < 100) {
+    fw.style.display = 'none';
+    const nextId = SECTIONS.find(s=>pct(s.id)<100)?.id || 'personal';
+    banner.innerHTML = `<div class="incomplete-banner" onclick="openSection('${nextId}')">
+      <div class="banner-icon">⚠️</div>
+      <div class="banner-text">
+        <div class="banner-title">Profil ${p}% to'ldirilgan</div>
+        <div class="banner-sub">Qabul belgilash uchun profilni to'ldiring. Qolgan joydan davom etish uchun bosing.</div>
+        <div class="banner-progress"><div class="banner-progress-fill" style="width:${p}%"></div></div>
+      </div>
+    </div>`;
+  } else {
+    fw.style.display = 'block';
+    fw.innerHTML = `
+      <div style="background:var(--teal-pale);border:1.5px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;margin-top:16px;">
+        <div style="font-size:12px;color:var(--teal);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Profil tayyor ✓</div>
+        <div style="font-size:13.5px;color:var(--dark);">Ma'lumotlaringiz saqlangan. Faqat shikoyatingizni kiriting.</div>
+      </div>
+      <div class="field-group">
+        <div class="field"><label class="field-label">Shikoyat <span class="req">*</span></label>
+          <textarea id="quickComplaint" placeholder="Masalan: tish og'riyapti, milk qonayapti..." style="min-height:100px;"></textarea></div>
+        <div class="field"><label class="field-label">Qo'shimcha (ixtiyoriy)</label>
+          <textarea id="quickExtra" placeholder="..."></textarea></div>
+      </div>
+      <button class="btn-primary" onclick="submitQuick()" style="margin-top:16px;">✓ So'rov yuborish</button>`;
+  }
+}
+
+function renderEmptyState() {
+  return `
+    <div style="text-align:center;padding:36px 20px 8px;">
+      <div style="width:72px;height:72px;background:var(--teal-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;">📅</div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--dark);margin-bottom:10px;line-height:1.3;">Siz hali biz bilan<br>qabul so'rovi yubormadingiz</div>
+      <div style="font-size:13.5px;color:var(--gray);line-height:1.6;margin-bottom:28px;">Birinchi qabulingizga yoziling —<br>shifokor siz bilan bog'lanadi.</div>
+      <button class="btn-primary" onclick="startRequest('free')" style="margin-bottom:10px;">🎁 Bepul konsultatsiyaga yozilish</button>
+      <button onclick="startRequest('paid')" style="width:100%;padding:13px;background:transparent;color:var(--teal);border:1.5px solid var(--teal);border-radius:12px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">📅 Qabulga yozilish</button>
+    </div>`;
+}
+
+function startRequest(type) {
+  const p = totalPct();
+  if (p < 100) {
+    const nextId = SECTIONS.find(s=>pct(s.id)<100)?.id || 'personal';
+    openSection(nextId);
+  } else {
+    S.requestType = type;
+    saveState(S);
+    const fw = document.getElementById('apptFormWrap');
+    document.getElementById('apptBanner').innerHTML = '';
+    fw.style.display = 'block';
+    fw.innerHTML = `
+      <div style="background:var(--teal-pale);border:1.5px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;margin-top:16px;">
+        <div style="font-size:12px;color:var(--teal);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">${type==='free' ? '🎁 Bepul konsultatsiya' : '📅 Qabul'}</div>
+        <div style="font-size:13.5px;color:var(--dark);">Ma'lumotlaringiz saqlangan. Faqat shikoyatingizni kiriting.</div>
+      </div>
+      <div class="field-group">
+        <div class="field"><label class="field-label">Shikoyat <span class="req">*</span></label>
+          <textarea id="quickComplaint" placeholder="Masalan: tish og'riyapti, milk qonayapti..." style="min-height:100px;"></textarea></div>
+        <div class="field"><label class="field-label">Qo'shimcha (ixtiyoriy)</label>
+          <textarea id="quickExtra" placeholder="..."></textarea></div>
+      </div>
+      <button class="btn-primary" onclick="submitQuick()" style="margin-top:16px;">✓ So'rov yuborish</button>`;
+  }
+}
+
+// ── Form overlay ─────────────────────────────────────────────
+function openSection(id) {
+  const s = SECTIONS.find(x=>x.id===id);
+  const idx = SECTIONS.indexOf(s)+1;
+  document.getElementById('overlayTitle').textContent = s.title;
+  document.getElementById('overlayStep').textContent = idx+' / '+SECTIONS.length;
+  document.getElementById('overlayProgressFill').style.width = ((idx-1)/SECTIONS.length*100)+'%';
+  document.getElementById('overlayBody').innerHTML = formHTML(id);
+  const isLast = idx===SECTIONS.length;
+  const nextId = SECTIONS[idx]?.id||'';
+  document.getElementById('overlayFooter').innerHTML = `
+    <button class="btn-primary" onclick="saveSec('${id}',${isLast},'${nextId}')">${isLast?'✓ Saqlash':'Davom etish →'}</button>
+    ${idx>1?`<button class="btn-ghost" onclick="openSection('${SECTIONS[idx-2].id}')">← Orqaga</button>`:''}`;
+  restoreVals(id);
+  document.getElementById('formOverlay').classList.add('open');
+  document.getElementById('overlayBack').onclick = closeOverlay;
+}
+
+function closeOverlay() {
+  document.getElementById('formOverlay').classList.remove('open');
+  renderProfile(); updateDot();
+  if(document.getElementById('page-appt').classList.contains('active')) renderAppt();
+}
+
+function saveSec(id, isLast, nextId) {
+  collectVals(id); saveState(S); toast('Saqlandi ✓');
+  if(isLast) { submitAll(); } else { openSection(nextId); }
+}
+
+// ── Collect & restore ────────────────────────────────────────
+function collectVals(id) {
+  const b = document.getElementById('overlayBody');
+  b.querySelectorAll('[data-key]').forEach(el => {
+    S[el.dataset.key] = el.type==='checkbox' ? el.checked : el.value;
+  });
+  b.querySelectorAll('input[type="radio"]:checked').forEach(el => { S[el.name]=el.value; });
+  const cg={};
+  b.querySelectorAll('input[type="checkbox"][data-group]').forEach(el => {
+    if(!cg[el.dataset.group]) cg[el.dataset.group]=[];
+    if(el.checked) cg[el.dataset.group].push(el.value);
+  });
+  Object.assign(S, cg);
+}
+
+function restoreVals(id) {
+  const b = document.getElementById('overlayBody');
+  b.querySelectorAll('[data-key]').forEach(el => {
+    if(S[el.dataset.key]!==undefined) {
+      if(el.type==='checkbox') el.checked=S[el.dataset.key];
+      else el.value=S[el.dataset.key];
+    }
+  });
+  b.querySelectorAll('input[type="radio"]').forEach(el => { if(S[el.name]===el.value) el.checked=true; });
+  b.querySelectorAll('.tog').forEach(btn => {
+    const k=btn.dataset.key, v=btn.dataset.val;
+    if(S[k]!==undefined && ((v==='ha'&&S[k]===true)||(v==='yoq'&&S[k]===false)))
+      btn.classList.add(v==='ha'?'yes':'no');
+  });
+  b.querySelectorAll('input[type="checkbox"][data-group]').forEach(el => {
+    const arr=S[el.dataset.group];
+    if(Array.isArray(arr)&&arr.includes(el.value)) el.checked=true;
+  });
+}
+
+function togBtn(el, key, val) {
+  el.parentElement.querySelectorAll('.tog').forEach(b=>b.className='tog');
+  el.classList.add(val==='ha'?'yes':'no');
+  S[key]=(val==='ha');
+}
+
+// ── Form HTML sections ───────────────────────────────────────
+function formHTML(id) {
+  const H = {
+    personal:`<div class="form-section-title">Shaxsiy ma'lumotlar</div>
+      <p class="form-section-sub">Bir marta saqlanadi — keyingi safar avtomatik ishlatiladi.</p>
+      <div class="field-group">
+        <div class="field"><label class="field-label">Ism / Familiya <span class="req">*</span></label><input type="text" data-key="fullName" placeholder="Aliyev Jasur"></div>
+        <div class="field"><label class="field-label">Tug'ilgan sana <span class="req">*</span></label><input type="date" data-key="birthDate"></div>
+        <div class="field"><label class="field-label">Telefon <span class="req">*</span></label><input type="tel" data-key="phone" placeholder="+998 90 000 00 00"></div>
+        <div class="field"><label class="field-label">Email</label><input type="email" data-key="email" placeholder="email@example.com"></div>
+        <div class="field"><label class="field-label">Manzil</label><input type="text" data-key="address" placeholder="Shahar, ko'cha"></div>
+        <div class="field"><label class="field-label">Kasbi</label><input type="text" data-key="job"></div>
+        <div class="sep">Favqulodda aloqa</div>
+        <div class="field"><label class="field-label">Yaqin inson (ism)</label><input type="text" data-key="emergencyName"></div>
+        <div class="field"><label class="field-label">Telefon</label><input type="tel" data-key="emergencyPhone"></div>
+      </div>`,
+    medical:`<div class="form-section-title">Tibbiy tarix</div>
+      <p class="form-section-sub">Quyidagi kasalliklardan biri bormi?</p>
+      <div class="field-group">
+        <div class="field"><label class="field-label">Qandli diabet</label><div class="toggle-group"><button class="tog" data-key="diabet" data-val="ha" onclick="togBtn(this,'diabet','ha')">Ha</button><button class="tog" data-key="diabet" data-val="yoq" onclick="togBtn(this,'diabet','yoq')">Yo'q</button></div></div>
+        <div class="field"><label class="field-label">Yurak kasalligi</label><div class="toggle-group"><button class="tog" data-key="heart" data-val="ha" onclick="togBtn(this,'heart','ha')">Ha</button><button class="tog" data-key="heart" data-val="yoq" onclick="togBtn(this,'heart','yoq')">Yo'q</button></div></div>
+        <div class="field"><label class="field-label">Qon bosimi</label><div class="toggle-group"><button class="tog" data-key="bp" data-val="ha" onclick="togBtn(this,'bp','ha')">Ha</button><button class="tog" data-key="bp" data-val="yoq" onclick="togBtn(this,'bp','yoq')">Yo'q</button></div></div>
+        <div class="field"><label class="field-label">Allergiya</label><input type="text" data-key="allergy" placeholder="Masalan: penitsillinga"></div>
+        <div class="field"><label class="field-label">Doimiy dorilar</label><input type="text" data-key="meds" placeholder="Yo'q bo'lsa bo'sh qoldiring"></div>
+        <div class="field"><label class="field-label">Homiladorlik</label><input type="text" data-key="pregnancy" placeholder="Ha / Yo'q / Muddat"></div>
+      </div>`,
+    dental:`<div class="form-section-title">Tish tarixi</div>
+      <p class="form-section-sub">Tishlaringiz haqida qisqacha.</p>
+      <div class="field-group">
+        <div class="field"><label class="field-label">Oxirgi stomatolog tashrifi</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="lastVisit" value="6oy"><span>6 oydan kam oldin</span></label>
+            <label class="radio-opt"><input type="radio" name="lastVisit" value="1yil"><span>1 yil oldin</span></label>
+            <label class="radio-opt"><input type="radio" name="lastVisit" value="2yil"><span>2+ yil oldin</span></label>
+            <label class="radio-opt"><input type="radio" name="lastVisit" value="hech"><span>Hech bormagan</span></label>
+          </div></div>
+        <div class="field"><label class="field-label">Tish og'rig'i</label><div class="toggle-group"><button class="tog" data-key="toothpain" data-val="ha" onclick="togBtn(this,'toothpain','ha')">Ha</button><button class="tog" data-key="toothpain" data-val="yoq" onclick="togBtn(this,'toothpain','yoq')">Yo'q</button></div></div>
+        <div class="field"><label class="field-label">Milk qonashi</label><div class="toggle-group"><button class="tog" data-key="gumbleed" data-val="ha" onclick="togBtn(this,'gumbleed','ha')">Ha</button><button class="tog" data-key="gumbleed" data-val="yoq" onclick="togBtn(this,'gumbleed','yoq')">Yo'q</button></div></div>
+        <div class="field"><label class="field-label">Sezgirlik (issiq/sovuq)</label><div class="toggle-group"><button class="tog" data-key="sensitivity" data-val="ha" onclick="togBtn(this,'sensitivity','ha')">Ha</button><button class="tog" data-key="sensitivity" data-val="yoq" onclick="togBtn(this,'sensitivity','yoq')">Yo'q</button></div></div>
+        <div class="field"><label class="field-label">Bruksizm</label><div class="toggle-group"><button class="tog" data-key="bruxism" data-val="ha" onclick="togBtn(this,'bruxism','ha')">Ha</button><button class="tog" data-key="bruxism" data-val="yoq" onclick="togBtn(this,'bruxism','yoq')">Yo'q</button></div></div>
+        <div class="field"><label class="field-label">Boshqa shikoyat</label><textarea data-key="otherComplaint" placeholder="Sizni bezovta qilayotgan narsa..."></textarea></div>
+      </div>`,
+    consent:`<div class="form-section-title">Tasdiqlash</div>
+      <p class="form-section-sub">Iltimos, quyidagi shartlarni o'qib tasdiqlang.</p>
+      <div class="consent-box"><strong>Rasmga olishga rozilik:</strong><ul><li>Tashxis va davolashni rejalashtirish</li><li>Davolash natijalarini hujjatlashtirish</li><li>Faqat tibbiy maqsadda, maxfiy saqlanadi</li></ul></div>
+      <label class="check-opt" style="margin-bottom:16px;"><input type="checkbox" data-key="photoConsent"><span>Rasmga olishga roziman</span></label>
+      <div class="consent-box"><strong>6 oylik profilaktik dastur:</strong><ul><li>Har 6 oyda bir marta ko'rik</li><li>Kariyes davolansa — keyingi cleaning bepul</li><li>Qabulni bekor qilish — 24 soat oldin</li></ul></div>
+      <label class="check-opt"><input type="checkbox" data-key="programConsent"><span>Profilaktik dastur shartlariga roziman</span></label>`,
+    consult:`<div class="form-section-title">Konsultatsiya</div>
+      <p class="form-section-sub">Shifokorga tez va to'g'ri tashxis qo'yishga yordam beradi.</p>
+      <div class="field-group">
+        <div class="field"><label class="field-label">Milk qachondan beri qonayapti?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="bleedDur" value="1-2hafta"><span>1–2 hafta</span></label>
+            <label class="radio-opt"><input type="radio" name="bleedDur" value="1-3oy"><span>1–3 oy</span></label>
+            <label class="radio-opt"><input type="radio" name="bleedDur" value="nechaYil"><span>Bir necha yil</span></label>
+            <label class="radio-opt"><input type="radio" name="bleedDur" value="yoq"><span>Qonmaydi</span></label>
+          </div></div>
+        <div class="field"><label class="field-label">Qonash qachon bo'ladi?</label>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label class="check-opt"><input type="checkbox" data-group="bleedWhen" value="tishYuvganda"><span>Tish yuvganda</span></label>
+            <label class="check-opt"><input type="checkbox" data-group="bleedWhen" value="ovqatda"><span>Ovqat chaynaganda</span></label>
+            <label class="check-opt"><input type="checkbox" data-group="bleedWhen" value="oziOzidan"><span>O'zi-o'zidan</span></label>
+            <label class="check-opt"><input type="checkbox" data-group="bleedWhen" value="doimiy"><span>Doimiy</span></label>
+          </div></div>
+        <div class="field"><label class="field-label">Kuniga necha marta tish yuvasiz?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="brushFreq" value="1"><span>1 marta</span></label>
+            <label class="radio-opt"><input type="radio" name="brushFreq" value="2"><span>2 marta</span></label>
+            <label class="radio-opt"><input type="radio" name="brushFreq" value="0"><span>Yuvmayman</span></label>
+          </div></div>
+        <div class="field"><label class="field-label">Floss ishlatasizmi?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="floss" value="harKuni"><span>Har kuni</span></label>
+            <label class="radio-opt"><input type="radio" name="floss" value="bazida"><span>Ba'zan</span></label>
+            <label class="radio-opt"><input type="radio" name="floss" value="hech"><span>Hech qachon</span></label>
+          </div></div>
+        <div class="field"><label class="field-label">Og'izdan yoqimsiz hid</label><div class="toggle-group"><button class="tog" data-key="badBreath" data-val="ha" onclick="togBtn(this,'badBreath','ha')">Ha</button><button class="tog" data-key="badBreath" data-val="yoq" onclick="togBtn(this,'badBreath','yoq')">Yo'q</button></div></div>
+        <div class="field"><label class="field-label">Chekasizmi?</label><div class="toggle-group"><button class="tog" data-key="smoking" data-val="ha" onclick="togBtn(this,'smoking','ha')">Ha</button><button class="tog" data-key="smoking" data-val="yoq" onclick="togBtn(this,'smoking','yoq')">Yo'q</button></div></div>
+        <div class="field"><label class="field-label">Asosiy shikoyat</label><textarea data-key="complaint" placeholder="Sizni bezovta qilayotgan narsa..."></textarea></div>
+      </div>`,
+  };
+  return H[id]||'';
+}
+
+// ── Submit ───────────────────────────────────────────────────
+async function submitAll() {
+  try {
+    await fetch('/api/patient',{method:'POST',headers:{'Content-Type':'application/json','x-telegram-init-data':initData},body:JSON.stringify(S)});
+    await fetch('/api/request',{method:'POST',headers:{'Content-Type':'application/json','x-telegram-init-data':initData},body:JSON.stringify(S)});
+  } catch {}
+  closeOverlay(); showSuccess();
+}
+
+async function submitQuick() {
+  const c = document.getElementById('quickComplaint')?.value?.trim();
+  if(!c){toast("Shikoyatni kiriting!");return;}
+  try {
+    await fetch('/api/request',{method:'POST',headers:{'Content-Type':'application/json','x-telegram-init-data':initData},body:JSON.stringify({...S,complaint:c})});
+  } catch {}
+  showSuccess();
+}
+
+function showSuccess() {
+  S.hasSubmitted = true; saveState(S);
+  const fw = document.getElementById('apptFormWrap');
+  document.getElementById('apptBanner').innerHTML='';
+  fw.style.display='block';
+  fw.innerHTML=`<div class="success-state">
+    <div class="success-ring">✅</div>
+    <h3>So'rov qabul qilindi!</h3>
+    <p>Shifokor ma'lumotlaringizni ko'rib chiqadi va qabul vaqtini belgilash uchun siz bilan bog'lanadi.</p>
+    <div style="margin-top:20px;padding:14px;background:var(--teal-pale);border-radius:12px;font-size:13px;color:var(--gray);">📞 Telegram yoki telefon orqali bog'laniladi</div>
+    <button class="btn-primary" onclick="renderAppt()" style="margin-top:20px;">Yangi so'rov →</button>
+  </div>`;
+  openTab('appt');
+}
+
+function openMap() { window.open('https://maps.google.com/?q=Tashkent+Chilonzor','_blank'); }
+
+function toast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+// ── Init ─────────────────────────────────────────────────────
+updateDot();
+renderProfile();
+</script>
+</body>
+</html>

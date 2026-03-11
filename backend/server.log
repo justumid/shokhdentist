@@ -1,0 +1,68 @@
+/home/sardor/Desktop/dental-booking/backend/main.py:70: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+/home/sardor/Desktop/dental-booking/backend/main.py:87: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("shutdown")
+INFO:     Started server process [120109]
+INFO:     Waiting for application startup.
+{"timestamp": "2026-03-11T09:46:21.052233", "level": "INFO", "logger": "shokhdentist", "message": "Starting ShokhDentist API v1.0.0", "module": "main", "function": "startup_event", "line": 73}
+{"timestamp": "2026-03-11T09:46:21.052525", "level": "INFO", "logger": "shokhdentist", "message": "Debug mode: False", "module": "main", "function": "startup_event", "line": 74}
+{"timestamp": "2026-03-11T09:46:21.052709", "level": "INFO", "logger": "shokhdentist", "message": "Rate limiting: True", "module": "main", "function": "startup_event", "line": 75}
+{"timestamp": "2026-03-11T09:46:21.053736", "level": "INFO", "logger": "shokhdentist", "message": "Using JSON file storage", "module": "database", "function": "init_database", "line": 76}
+{"timestamp": "2026-03-11T09:46:21.054086", "level": "INFO", "logger": "shokhdentist", "message": "Application startup complete", "module": "main", "function": "startup_event", "line": 85}
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:60232 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51662 - "GET /api/health HTTP/1.1" 200 OK
+{"timestamp": "2026-03-11T09:46:32.527125", "level": "INFO", "logger": "shokhdentist", "message": "User 123 session updated", "module": "main", "function": "init_app", "line": 392}
+INFO:     127.0.0.1:51668 - "GET /api/init HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51684 - "GET /api/patient/state HTTP/1.1" 200 OK
+/home/sardor/Desktop/dental-booking/backend/main.py:463: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+  patient_dict = patient_data.dict()
+{"timestamp": "2026-03-11T09:46:32.569453", "level": "INFO", "logger": "shokhdentist", "message": "Updated patient state for user 123", "module": "main", "function": "save_patient_state", "line": 470}
+INFO:     127.0.0.1:51696 - "POST /api/patient/state HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51704 - "GET /api/appointments HTTP/1.1" 200 OK
+{"timestamp": "2026-03-11T09:46:32.609500", "level": "INFO", "logger": "shokhdentist", "message": "Admin authenticated: admin", "module": "auth", "function": "get_admin_user", "line": 51}
+{"timestamp": "2026-03-11T09:46:32.610248", "level": "INFO", "logger": "shokhdentist", "message": "Admin admin retrieving appointments", "module": "main", "function": "admin_get_appointments", "line": 1049}
+INFO:     127.0.0.1:51720 - "GET /api/admin/appointments HTTP/1.1" 200 OK
+{"timestamp": "2026-03-11T09:46:32.629590", "level": "INFO", "logger": "shokhdentist", "message": "Admin authenticated: admin", "module": "auth", "function": "get_admin_user", "line": 51}
+INFO:     127.0.0.1:51732 - "GET /api/admin/patients HTTP/1.1" 200 OK
+{"timestamp": "2026-03-11T09:46:32.647503", "level": "INFO", "logger": "shokhdentist", "message": "Admin authenticated: admin", "module": "auth", "function": "get_admin_user", "line": 51}
+INFO:     127.0.0.1:51740 - "GET /api/admin/stats HTTP/1.1" 200 OK
+{"timestamp": "2026-03-11T09:46:32.668310", "level": "INFO", "logger": "shokhdentist", "message": "Admin authenticated: admin", "module": "auth", "function": "get_admin_user", "line": 51}
+{"timestamp": "2026-03-11T09:46:32.668890", "level": "INFO", "logger": "shokhdentist", "message": "Admin 'admin' fetching services", "module": "main", "function": "admin_get_services", "line": 1719}
+INFO:     127.0.0.1:51744 - "GET /api/admin/services HTTP/1.1" 200 OK
+{"timestamp": "2026-03-11T09:46:32.686516", "level": "INFO", "logger": "shokhdentist", "message": "Admin authenticated: admin", "module": "auth", "function": "get_admin_user", "line": 51}
+{"timestamp": "2026-03-11T09:46:32.687159", "level": "INFO", "logger": "shokhdentist", "message": "Admin 'admin' fetching team", "module": "main", "function": "admin_get_team", "line": 1730}
+INFO:     127.0.0.1:51752 - "GET /api/admin/team HTTP/1.1" 200 OK
+{"timestamp": "2026-03-11T09:46:32.702179", "level": "INFO", "logger": "shokhdentist", "message": "Admin authenticated: admin", "module": "auth", "function": "get_admin_user", "line": 51}
+{"timestamp": "2026-03-11T09:46:32.702641", "level": "INFO", "logger": "shokhdentist", "message": "Admin 'admin' fetching all reviews", "module": "main", "function": "admin_get_all_reviews", "line": 1741}
+INFO:     127.0.0.1:51756 - "GET /api/admin/reviews HTTP/1.1" 200 OK
+{"timestamp": "2026-03-11T09:46:32.724522", "level": "INFO", "logger": "shokhdentist", "message": "Admin authenticated: admin", "module": "auth", "function": "get_admin_user", "line": 51}
+{"timestamp": "2026-03-11T09:46:32.725095", "level": "INFO", "logger": "shokhdentist", "message": "Admin 'admin' fetching FAQ", "module": "main", "function": "admin_get_faq", "line": 1748}
+INFO:     127.0.0.1:51768 - "GET /api/admin/faq HTTP/1.1" 200 OK
+{"timestamp": "2026-03-11T09:46:32.745808", "level": "INFO", "logger": "shokhdentist", "message": "Admin authenticated: admin", "module": "auth", "function": "get_admin_user", "line": 51}
+{"timestamp": "2026-03-11T09:46:32.746263", "level": "INFO", "logger": "shokhdentist", "message": "Admin 'admin' fetching frozen days", "module": "main", "function": "admin_get_frozen_days", "line": 1759}
+INFO:     127.0.0.1:51772 - "GET /api/admin/frozen-days HTTP/1.1" 200 OK
+{"timestamp": "2026-03-11T09:46:32.769189", "level": "INFO", "logger": "shokhdentist", "message": "Admin authenticated: admin", "module": "auth", "function": "get_admin_user", "line": 51}
+{"timestamp": "2026-03-11T09:46:32.769683", "level": "INFO", "logger": "shokhdentist", "message": "Admin 'admin' fetching booked slots", "module": "main", "function": "admin_get_booked_slots", "line": 1766}
+INFO:     127.0.0.1:51774 - "GET /api/admin/booked-slots HTTP/1.1" 200 OK
+{"timestamp": "2026-03-11T09:46:32.790288", "level": "WARNING", "logger": "shokhdentist", "message": "HTTP 405: Method Not Allowed", "module": "exceptions", "function": "http_exception_handler", "line": 64}
+INFO:     127.0.0.1:51780 - "HEAD /api/health HTTP/1.1" 405 Method Not Allowed
+{"timestamp": "2026-03-11T09:46:32.832736", "level": "WARNING", "logger": "shokhdentist", "message": "HTTP 401: Not authenticated", "module": "exceptions", "function": "http_exception_handler", "line": 64}
+INFO:     127.0.0.1:51784 - "GET /api/admin/appointments/apt_test_12345/questionnaire HTTP/1.1" 401 Unauthorized
+{"timestamp": "2026-03-11T09:46:39.560133", "level": "WARNING", "logger": "shokhdentist", "message": "HTTP 401: Not authenticated", "module": "exceptions", "function": "http_exception_handler", "line": 64}
+INFO:     127.0.0.1:47604 - "GET /api/admin/appointments HTTP/1.1" 401 Unauthorized
+{"timestamp": "2026-03-11T09:46:48.729573", "level": "INFO", "logger": "shokhdentist", "message": "Admin authenticated: admin", "module": "auth", "function": "get_admin_user", "line": 51}
+{"timestamp": "2026-03-11T09:46:48.730073", "level": "INFO", "logger": "shokhdentist", "message": "Admin 'admin' downloading questionnaire for appointment apt_test_12345", "module": "main", "function": "admin_download_questionnaire", "line": 1136}
+{"timestamp": "2026-03-11T09:46:48.753026", "level": "INFO", "logger": "shokhdentist", "message": "Generated questionnaire PDF for appointment apt_test_12345", "module": "pdf_generator", "function": "generate_questionnaire", "line": 252}
+INFO:     127.0.0.1:47616 - "GET /api/admin/appointments/apt_test_12345/questionnaire HTTP/1.1" 200 OK
